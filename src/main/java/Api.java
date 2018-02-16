@@ -8,33 +8,53 @@ import java.util.List;
 @Data
 public class Api {
 
-    private String url;
-    private String method;
+    private String defaultUrl;
+    private String defaultMethod;
+    private Request defaultRequest;
+    private Response defaultResponse;
     private List<RequestResponseCombination> requestResponseCombinations;
 
     @Override
     public String toString() {
         return "Api{" +
-                "url='" + url + '\'' +
-                ", method='" + method + '\'' +
+                "defaultUrl='" + defaultUrl + '\'' +
+                ", defaultMethod='" + defaultMethod + '\'' +
+                ", defaultRequest=" + defaultRequest +
+                ", defaultResponse=" + defaultResponse +
                 ", requestResponseCombinations=" + requestResponseCombinations +
                 '}';
     }
 
-    public String getUrl() {
-        return url;
+    public String getDefaultUrl() {
+        return defaultUrl;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setDefaultUrl(String defaultUrl) {
+        this.defaultUrl = defaultUrl;
     }
 
-    public String getMethod() {
-        return method;
+    public String getDefaultMethod() {
+        return defaultMethod;
     }
 
-    public void setMethod(String method) {
-        this.method = method;
+    public void setDefaultMethod(String defaultMethod) {
+        this.defaultMethod = defaultMethod;
+    }
+
+    public Request getDefaultRequest() {
+        return defaultRequest;
+    }
+
+    public void setDefaultRequest(Request defaultRequest) {
+        this.defaultRequest = defaultRequest;
+    }
+
+    public Response getDefaultResponse() {
+        return defaultResponse;
+    }
+
+    public void setDefaultResponse(Response defaultResponse) {
+        this.defaultResponse = defaultResponse;
     }
 
     public List<RequestResponseCombination> getRequestResponseCombinations() {

@@ -8,13 +8,19 @@ import java.util.List;
  */
 @Data
 public class RequestResponseCombination {
+    private String id;
+    private String url;
+    private String method;
     private Request request;
     private Response response;
 
     @Override
     public String toString() {
         return "RequestResponseCombination{" +
-                "request=" + request +
+                "id='" + id + '\'' +
+                ", url='" + url + '\'' +
+                ", method='" + method + '\'' +
+                ", request=" + request +
                 ", response=" + response +
                 '}';
     }
@@ -33,5 +39,29 @@ public class RequestResponseCombination {
 
     public void setResponse(Response response) {
         this.response = response;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

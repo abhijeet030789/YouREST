@@ -1,5 +1,7 @@
 import lombok.Data;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -9,7 +11,9 @@ import java.util.Map;
 public class Response {
      private int statusCode;
      private String payload;
-     private Map<String,String> headers;
+     private Map<String,String> headers = new HashMap<>();
+     private boolean payloadJsonValdationRequired = false;
+     private List<Object> jsonAttributes;
 
      @Override
      public String toString() {
@@ -17,6 +21,8 @@ public class Response {
                   "statusCode=" + statusCode +
                   ", payload='" + payload + '\'' +
                   ", headers=" + headers +
+                  ", payloadJsonValdationRequired=" + payloadJsonValdationRequired +
+                  ", jsonAttributes=" + jsonAttributes +
                   '}';
      }
 
@@ -42,5 +48,21 @@ public class Response {
 
      public void setHeaders(Map<String, String> headers) {
           this.headers = headers;
+     }
+
+     public boolean isPayloadJsonValdationRequired() {
+          return payloadJsonValdationRequired;
+     }
+
+     public void setPayloadJsonValdationRequired(boolean payloadJsonValdationRequired) {
+          this.payloadJsonValdationRequired = payloadJsonValdationRequired;
+     }
+
+     public List<Object> getJsonAttributes() {
+          return jsonAttributes;
+     }
+
+     public void setJsonAttributes(List<Object> jsonAttributes) {
+          this.jsonAttributes = jsonAttributes;
      }
 }

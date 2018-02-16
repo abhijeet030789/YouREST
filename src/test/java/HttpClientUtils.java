@@ -1,5 +1,3 @@
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.http.HttpRequest;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
@@ -46,7 +44,9 @@ public class HttpClientUtils {
         }
         if(httpRequestBase instanceof HttpEntityEnclosingRequestBase){
             HttpEntityEnclosingRequestBase httpEntityEnclosingRequestBase = (HttpEntityEnclosingRequestBase) httpRequestBase;
-            httpEntityEnclosingRequestBase.setEntity(new StringEntity(payload));
+            if(null != payload) {
+                httpEntityEnclosingRequestBase.setEntity(new StringEntity(payload));
+            }
         }
         return httpRequestBase;
     }

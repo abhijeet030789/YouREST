@@ -1,9 +1,25 @@
 [
   {
-    "url" : "",
-    "method" : "GET",
+    "defaultUrl" : "http://localhost:8081/tests/100",
+    "defaultMethod" : "GET",
+    "defaultRequest" : {
+      "queryParams" : "",
+      "headers" : {
+        "a" : "a1",
+        "b" : "b1"
+      },
+      "payload" : null
+    },
+    "defaultResponse" : {
+      "statusCode" : 200,
+      "payload" : "hello world",
+      "headers" : {
+        "a" : "a1",
+        "b" : "b1"
+      }
+    },
     "requestResponseCombinations" : [
-       {
+       {  "id" : "T1",
          "request" : {
            "queryParams" : "",
            "headers" : {
@@ -14,7 +30,7 @@
          },
          "response" : {
            "statusCode" : 200,
-           "payload" : "",
+           "payload" : "hello world",
            "headers" : {
              "a" : "a1",
              "b" : "b1"
@@ -28,11 +44,11 @@
               "a" : "a1",
               "b" : "b1"
             },
-            "apyload" : null
+            "payload" : null
           },
           "response" : {
             "statusCode" : 200,
-            "payload" : "",
+            "payload" : "hello world",
             "headers" : {
               "a" : "a1",
               "b" : "b1"
@@ -42,9 +58,45 @@
       ]
   },
   {
-    "url" : "",
-    "method" : "POST",
+    "defaultUrl" : "http://localhost:8081/tests/200",
+    "defaultMethod" : "POST",
+    "defaultRequest" : {
+      "queryParams" : "",
+      "headers" : {
+        "a" : "a1",
+        "b" : "b1"
+      },
+      "payload" : null
+    },
+    "defaultResponse" : {
+      "statusCode" : 200,
+          "payload" : "",
+      "headers" : {
+        "a": "a1",
+        "b": "b1"
+      }
+    },
     "requestResponseCombinations" : [
+      { "id" : "T2",
+        "request" : {
+          "queryParams" : "",
+          "headers" : {
+            "a" : "a1",
+            "b" : "b1"
+          },
+          "payload" : ""
+        },
+        "response" : {
+          "statusCode" : 200,
+          "payload" : null,
+          "payloadJsonValdationRequired" : true,
+          "jsonAttributes" : [
+              "hello",
+               "hello1",
+              {"my" : "loving dududes"}
+          ]
+        }
+      },
       {
         "request" : {
           "queryParams" : "",
@@ -56,25 +108,7 @@
         },
         "response" : {
           "statusCode" : 200,
-          "payload" : "",
-          "headers" : {
-            "a" : "a1",
-            "b" : "b1"
-          }
-        }
-      },
-      {
-        "request" : {
-          "queryParams" : "",
-          "headers" : {
-            "a" : "a1",
-            "b" : "b1"
-          },
-          "apyload" : null
-        },
-        "response" : {
-          "statusCode" : 200,
-          "payload" : "",
+          "payload" : null,
           "headers" : {
             "a" : "a1",
             "b" : "b1"

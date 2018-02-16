@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RobotRunConfigurationSettings">
+    <option name="baseSuiteDirectory" value="robot/implementation/testsuites" />
+    <option name="pythonpath">
+      <list>
+        <option value="pythonlibs" />
+        <option value="robot/implementation/resources" />
+        <option value="robot/execution/local/settings" />
+      </list>
+    </option>
+    <option name="testEnvironmentDirectories">
+      <list>
+        <option value="robot/execution/local/settings" />
+      </list>
+    </option>
+    <option name="workingDirectory" value="robot" />
+  </component>
+</project>
