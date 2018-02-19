@@ -13,6 +13,7 @@ public class Response {
      private String payload;
      private Map<String,String> headers = new HashMap<>();
      private boolean payloadJsonValdationRequired = false;
+     private PayloadStructure payloadStructure = PayloadStructure.JSON;
      private List<Object> jsonAttributes;
 
      @Override
@@ -22,6 +23,7 @@ public class Response {
                   ", payload='" + payload + '\'' +
                   ", headers=" + headers +
                   ", payloadJsonValdationRequired=" + payloadJsonValdationRequired +
+                  ", payloadStructure=" + payloadStructure +
                   ", jsonAttributes=" + jsonAttributes +
                   '}';
      }
@@ -64,5 +66,13 @@ public class Response {
 
      public void setJsonAttributes(List<Object> jsonAttributes) {
           this.jsonAttributes = jsonAttributes;
+     }
+
+     public PayloadStructure getPayloadStructure() {
+          return payloadStructure;
+     }
+
+     public void setPayloadStructure(PayloadStructure payloadStructure) {
+          this.payloadStructure = payloadStructure;
      }
 }

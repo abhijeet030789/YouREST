@@ -90,10 +90,17 @@
           "statusCode" : 200,
           "payload" : null,
           "payloadJsonValdationRequired" : true,
+          "payloadStructure" : "JSON",
           "jsonAttributes" : [
               "hello",
-               "hello1",
-              {"my" : "loving dududes"}
+              { "my" : "loving dududes"},
+              { "x": [
+                      {"a": "a1"},
+                      {"b" : [
+                        {"c": "c1"}
+                      ]}
+                ]
+              }
           ]
         }
       },

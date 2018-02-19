@@ -3,6 +3,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -70,12 +71,12 @@ public class RestExecutor {
         HttpResponse response = HttpClientUtils.getHttpClient().execute(httpRequestBase);
         Map<String, String> responseHeaders = convert(response.getAllHeaders());
         int expectedStatusCode= combination.getResponse().getStatusCode();
-
+        String actualPayload = IOUtils.toString(response.getEntity().getContent());
+        List expectedJsonAttributes = combination.getResponse().getJsonAttributes();
         //Assertions
         if(0 != combination.getResponse().getStatusCode()){
             Assert.assertEquals(format("Status Code Should Match"), combination.getResponse().getStatusCode(), response.getStatusLine().getStatusCode());
         }
-        String actualPayload = IOUtils.toString(response.getEntity().getContent());
         if(null != combination.getResponse().getPayload()) {
             Assert.assertEquals(format("Payload Should match"), combination.getResponse().getPayload(), actualPayload);
         }
@@ -85,32 +86,12 @@ public class RestExecutor {
             String actualValue = responseHeaders.get(expectedHeader.getKey());
             //Assert.assertEquals(expectedValue, actualValue);  //2. Match values
         }
-
-        if(combination.getResponse().isPayloadJsonValdationRequired()){
-            Map<String, Object> jsonAsMap = new ObjectMapper().readValue(actualPayload, Map.class);
-            for(Object o : combination.getResponse().getJsonAttributes()){
-                if(o instanceof Map){
-                    //value bhi compare karna hai
-                }else if(o instanceof List){
-                    //sub doc
-                }else if (o instanceof String){
-                    Assert.assertTrue("The json response should contain key = "+o, jsonAsMap.containsKey(o));
-                }else{
-                    throw new IllegalArgumentException(String.format("o of class = %s, is not handled", o.getClass()));
-                }
-
-            }
+        if(combination.getResponse().isPayloadJsonValdationRequired()) {
+            validate(actualPayload, combination.getResponse().getPayloadStructure(), expectedJsonAttributes);
         }
+    }
         //System.out.println(String.format("api = %s", api));
         //for (Header header : responseHeaders){System.out.println("Key : " + header.getName() + " Value : " + header.getValue());}
-
-    }
-
-
-    private void validateJsonStructure(List<Object> expectedJsonAttributes,InputStream content, String keyPrefix){
-
-
-    }
     private String format(String msg){
         return "TestCaseId = "+combination.getId()+"; "+msg;
     }
@@ -123,4 +104,63 @@ public class RestExecutor {
         return map;
     }
 
-}
+    private void validate(String content, PayloadStructure payloadStructure, List expectedJsonAttributes){
+        switch(payloadStructure){
+            case ARRAY_OF_STRING   :
+                try {
+                    new ObjectMapper().readValue(content, String[].class);
+                }catch(IOException e){
+                    Assert.assertTrue("The content is not of type String[] Exception  = "+e.getMessage(), false);
+                }
+                return;
+            case ARRAY_OF_INTEGERS :
+                try {
+                    new ObjectMapper().readValue(content, Integer[].class);
+                }catch(IOException e){
+                    Assert.assertTrue("The content is not of type Integer[]. Exception = "+e.getMessage(), false);
+                }
+                return;
+            case ARRAY_OF_JSON     :
+                try {
+                    Map<String, Object>[] mapArr = new ObjectMapper().readValue(content, Map[].class);
+                    for (Map actualMap : mapArr) {
+                        validateJsonStructure(expectedJsonAttributes, actualMap);
+                    }
+                }catch(IOException e){
+                    Assert.assertTrue("The content is not of type Map[]. Exception = "+e.getMessage(), false);
+                }
+                return;
+            case JSON              :
+                try {
+                    Map<String, Object> actualMap = new ObjectMapper().readValue(content, Map.class);
+                    validateJsonStructure(expectedJsonAttributes, actualMap);
+                }catch(IOException e){
+                    Assert.assertTrue("The content is not of type Map. Exception = "+e.getMessage(), false);
+                }
+                return;
+        }
+    }
+
+
+    private void validateJsonStructure(List expectedJsonAttributes, Map<String, Object> actualResponseJsonAsMap) throws IOException {
+            for (Object expectedJsonAttribute : expectedJsonAttributes) {
+                if (expectedJsonAttribute instanceof Map) {
+                    Map<String, Object> keyValPair = (Map<String, Object>) expectedJsonAttribute;
+                    for (Map.Entry<String, Object> entry : keyValPair.entrySet()) {
+                        Assert.assertTrue("The actual response should contain a key with name =  " + entry.getKey(), actualResponseJsonAsMap.containsKey(entry.getKey()));
+                        if (entry.getValue() instanceof List) {
+                            validateJsonStructure((List) entry.getValue(), (Map) actualResponseJsonAsMap.get(entry.getKey()));
+                        } else {
+                            Assert.assertEquals(String.format("The value of key = '%s' should match with expectedValue", entry.getKey()), entry.getValue(), actualResponseJsonAsMap.get(entry.getKey()));
+                        }
+                    }
+                } else if (expectedJsonAttribute instanceof String) {
+                    Assert.assertTrue("The json response should contain key = " + expectedJsonAttribute, actualResponseJsonAsMap.containsKey(expectedJsonAttribute));
+
+                } else {
+                    throw new IllegalArgumentException(String.format("o of class = %s, is not handled", expectedJsonAttribute.getClass()));
+                }
+            }
+        }
+    }
+
