@@ -1,5 +1,9 @@
 import lombok.Data;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.dwiveddi.utils.csv.annotation.CsvMapped;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -7,10 +11,13 @@ import java.util.Map;
  */
 @Data
 public class Request {
-    private String queryParams;
-    private String payload;
-    private Map<String,String> headers;
+    @CsvMapped.Column(index = 3) private String queryParams;
+    @CsvMapped.Column(index = 4, converterMethod = "convertTopMap") private Map<String,String> headers;
+    @CsvMapped.Column(index = 5) private String payload;
 
+    public Map<String, String> convertTopMap(String headers) throws IOException {
+        return new ObjectMapper().readValue(headers, Map.class);
+    }
     public Request(String queryParams, String payload, Map<String, String> headers) {
         this.queryParams = queryParams;
         this.payload = payload;

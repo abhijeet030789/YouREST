@@ -1,4 +1,5 @@
 import lombok.Data;
+import org.dwiveddi.utils.csv.annotation.CsvMapped;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,11 +9,12 @@ import java.util.List;
  */
 @Data
 public class RequestResponseCombination {
-    private String id;
-    private String url;
-    private String method;
-    private Request request;
-    private Response response;
+
+    @CsvMapped.Column(index = 0) private String id;
+    @CsvMapped.Column(index = 1) private String url;
+    @CsvMapped.Column(index = 2) private String method;
+    @CsvMapped.NestedColumn(index = {3,4,5}) private Request request;
+    @CsvMapped.NestedColumn(index = {6,7,8})private Response response;
 
     @Override
     public String toString() {

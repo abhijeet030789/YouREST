@@ -1,5 +1,9 @@
 import lombok.Data;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.dwiveddi.utils.csv.annotation.CsvMapped;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,12 +13,28 @@ import java.util.Map;
  */
 @Data
 public class Response {
-     private int statusCode;
-     private String payload;
-     private Map<String,String> headers = new HashMap<>();
-     private boolean payloadJsonValdationRequired = false;
-     private PayloadStructure payloadStructure = PayloadStructure.JSON;
-     private List<Object> jsonAttributes;
+     @CsvMapped.Column(index = 6, converterMethod = "getInt") private int statusCode;
+     @CsvMapped.Column(index = 7, converterMethod = "convertTopMap") private Map<String,String> headers = new HashMap<>();
+     @CsvMapped.Column(index = 8) private String payload;
+     @CsvMapped.Column(index = 9, converterMethod = "getBoolean")private boolean payloadJsonValdationRequired = false;
+     @CsvMapped.Column(index = 10,converterMethod = "getPayloadStructure" )private PayloadStructure payloadStructure = PayloadStructure.JSON;
+     @CsvMapped.Column(index = 11, converterMethod = "getList")private List<Object> jsonAttributes;
+
+     public int getInt(String s){
+          return Integer.parseInt(s.trim());
+     }
+     public boolean getBoolean(String s){
+          return s.isEmpty() ? false : Boolean.parseBoolean(s.trim().toLowerCase());
+     }
+     public List<Object> getList(String s) throws IOException {
+          return s.isEmpty() ? null : new ObjectMapper().readValue(s, List.class);
+     }
+     public PayloadStructure getPayloadStructure(String s){
+          return s.isEmpty() ? null : PayloadStructure.valueOf(s);
+     }
+     public Map<String, String> convertTopMap(String headers) throws IOException {
+          return new ObjectMapper().readValue(headers, Map.class);
+     }
 
      @Override
      public String toString() {
