@@ -24,6 +24,7 @@ import java.util.Map;
 @RunWith(Parameterized.class)
 public class RestExecutor {
 
+    private Map<String, Object> testCaseVariableMap = new HashMap<>();
     private static HttpClient httpClient = HttpClientUtils.getHttpClient();
     String keyPrefix = "";
     @BeforeClass
@@ -92,9 +93,10 @@ public class RestExecutor {
             String actualValue = responseHeaders.get(expectedHeader.getKey());
             Assert.assertEquals(expectedValue, actualValue);  //2. Match values
         }
-        if(combination.getResponse().isPayloadJsonValdationRequired()) {
-            validate(actualPayload, combination.getResponse().getPayloadStructure(), expectedJsonAttributes,keyPrefix);
-        }
+        digestPayload(combination.getResponse().isPayloadJsonValdationRequired(), actualPayload, combination.getResponse().getPayloadStructure()
+                , expectedJsonAttributes, keyPrefix, combination.getVariableName());
+
+
     }
         //System.out.println(String.format("api = %s", api));
         //for (Header header : responseHeaders){System.out.println("Key : " + header.getName() + " Value : " + header.getValue());}
@@ -110,42 +112,54 @@ public class RestExecutor {
         return map;
     }
 
-    private void validate(String content, PayloadStructure payloadStructure, List expectedJsonAttributes,String keyPrefix){
+    private void digestPayload(boolean isValidationRequired, String content, PayloadStructure payloadStructure, List expectedJsonAttributes,String keyPrefix, String variableName){
+        Object o = null;
         switch(payloadStructure){
+            case STRING:
+                o = content; break;
             case ARRAY_OF_STRING   :
                 try {
-                    new ObjectMapper().readValue(content, String[].class);
+                    o = new ObjectMapper().readValue(content, String[].class);
                 }catch(IOException e){
                     Assert.assertTrue("The content is not of type String[] Exception  = "+e.getMessage(), false);
                 }
-                return;
+                break;
             case ARRAY_OF_INTEGERS :
                 try {
-                    new ObjectMapper().readValue(content, Integer[].class);
+                    o = new ObjectMapper().readValue(content, Integer[].class);
                 }catch(IOException e){
                     Assert.assertTrue("The content is not of type Integer[]. Exception = "+e.getMessage(), false);
                 }
-                return;
+                break;
             case ARRAY_OF_JSON     :
                 try {
                     Map<String, Object>[] mapArr = new ObjectMapper().readValue(content, Map[].class);
-                    for (Map actualMap : mapArr) {
-                        validateJsonStructure(expectedJsonAttributes, actualMap,keyPrefix);
+                    if(isValidationRequired) {
+                        for (Map actualMap : mapArr) {
+                            validateJsonStructure(expectedJsonAttributes, actualMap, keyPrefix);
+                        }
                     }
+                    o = mapArr;
                 }catch(IOException e){
                     Assert.assertTrue("The content is not of type Map[]. Exception = "+e.getMessage(), false);
                 }
-                return;
+                break;
             case JSON              :
                 try {
                     Map<String, Object> actualMap = new ObjectMapper().readValue(content, Map.class);
-                    validateJsonStructure(expectedJsonAttributes, actualMap,keyPrefix);
+                    if(isValidationRequired) {
+                        validateJsonStructure(expectedJsonAttributes, actualMap, keyPrefix);
+                    }
+                    o = actualMap;
                 }catch(IOException e){
                     Assert.assertTrue("The content is not of type Map. Exception = "+e.getMessage(), false);
                 }
-                return;
+                break;
         }
+        testCaseVariableMap.put(variableName, o);
     }
+
+
 
     private void validateJsonStructure(List expectedJsonAttributes, Map<String, Object> actualResponseJsonAsMap,String keyPrefix) throws IOException {
             for (Object expectedJsonAttribute : expectedJsonAttributes) {

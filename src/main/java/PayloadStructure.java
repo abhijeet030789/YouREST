@@ -3,6 +3,7 @@
  */
 public enum PayloadStructure {
     STRING,
+    INTEGER,
     JSON,
     ARRAY_OF_STRING,
     ARRAY_OF_JSON,
