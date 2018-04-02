@@ -1,3 +1,5 @@
+package dto;
+
 import lombok.Data;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -30,7 +32,7 @@ public class Request {
 
     @Override
     public String toString() {
-        return "Request{" +
+        return "dto.Request{" +
                 "queryParams='" + queryParams + '\'' +
                 ", payload='" + payload + '\'' +
                 ", headers=" + headers +

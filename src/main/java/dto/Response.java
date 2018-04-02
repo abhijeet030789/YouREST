@@ -1,5 +1,6 @@
+package dto;
+
 import lombok.Data;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.dwiveddi.utils.csv.annotation.CsvMapped;
 
@@ -38,7 +39,7 @@ public class Response {
 
      @Override
      public String toString() {
-          return "Response{" +
+          return "dto.Response{" +
                   "statusCode=" + statusCode +
                   ", payload='" + payload + '\'' +
                   ", headers=" + headers +

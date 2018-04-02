@@ -1,3 +1,5 @@
+package dto;
+
 import lombok.Data;
 
 import java.util.List;
@@ -16,7 +18,7 @@ public class Api {
 
     @Override
     public String toString() {
-        return "Api{" +
+        return "dto.Api{" +
                 "defaultUrl='" + defaultUrl + '\'' +
                 ", defaultMethod='" + defaultMethod + '\'' +
                 ", defaultRequest=" + defaultRequest +

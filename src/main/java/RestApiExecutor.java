@@ -1,45 +1,74 @@
+import dto.Api;
+import dto.PayloadStructure;
+import dto.RequestResponseCombination;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.dwiveddi.utils.excel.ExcelMapper;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.testng.Assert;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+import utils.HttpClientUtils;
+
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-
-@RunWith(Parameterized.class)
-public class RestExecutor {
-
-    private Map<String, Object> testCaseVariableMap = new HashMap<>();
+public class RestApiExecutor {
     private static HttpClient httpClient = HttpClientUtils.getHttpClient();
     String keyPrefix = "";
-    @BeforeClass
-    public static void setup(){}
-    private RequestResponseCombination combination;
 
-    @Parameterized.Parameters
-    public static List<RequestResponseCombination> dataFromExcel() throws IOException {
-        ExcelMapper<RequestResponseCombination> mapper = new ExcelMapper<>(RequestResponseCombination.class);
-        List<RequestResponseCombination> combinations = mapper.getList("C:/OpenSource/rest-api-test/conf/Book1.xlsx", 12, 2);
-        return combinations;
+
+    @DataProvider(name = "combinations")
+    public Iterator<Object[]> dataFromConfigFiles()  {
+        try {
+            List<RequestResponseCombination> combinations = new ArrayList<>();
+            String confDir = System.getProperty("confDir");
+            List<String> listOfFilePaths = new ArrayList<>();
+            populateFileNames(confDir, listOfFilePaths, new String[]{".xlsx", ".json"});
+            ExcelMapper<RequestResponseCombination> excelMapper = new ExcelMapper<RequestResponseCombination>(RequestResponseCombination.class);
+            for (String filePath : listOfFilePaths) {
+                if (filePath.endsWith(".json")) {
+                    combinations.addAll(data(filePath));
+                } else if (filePath.endsWith(".xlsx")) {
+                    combinations.addAll(excelMapper.getList(filePath, 12, 2));
+                }
+            }
+            List<Object[]> list = new ArrayList<>();
+            for (RequestResponseCombination combination : combinations) {
+                list.add(new Object[]{combination});
+            }
+            return list.iterator();
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("Error while ... + "+e.getMessage() + " - " + e.getCause(), e);
+        }
     }
+
+    private void populateFileNames(String filePath, List<String> fileNames, String[] allowedFileExtensions){
+        File file = new File(filePath);
+        if(!file.exists())
+            throw new IllegalArgumentException("File Not Found. filePath = "+filePath);
+        if(file.isDirectory()){
+            for(File innerFile : file.listFiles()){
+                populateFileNames(innerFile.getAbsolutePath(), fileNames, allowedFileExtensions);
+            }
+        }else{
+            for(String allowedFileExtension : allowedFileExtensions){
+                if(file.getAbsolutePath().endsWith(allowedFileExtension)){
+                    fileNames.add(file.getAbsolutePath()); break;
+                }
+            }
+        }
+    }
+
+
     //@Parameterized.Parameters
-    public static List<RequestResponseCombination> data() throws IOException {
-        File file =  new File("C:/OpenSource/rest-api-test/conf/rest-api-contracts.json");
+    public List<RequestResponseCombination> data(String filePath) throws IOException {
+        File file =  new File(filePath);
         Api[] apiArr = new ObjectMapper().readValue(file, Api[].class);
         List<RequestResponseCombination> listOfCombinations = new ArrayList<>();
         for(Api api : apiArr){
@@ -67,13 +96,14 @@ public class RestExecutor {
         }
         return listOfCombinations;
     }
-    public RestExecutor(RequestResponseCombination combination) {
+   /* public RestExecutor(dto.RequestResponseCombination combination) {
         super();
         this.combination = combination;
-    }
+    }*/
 
-    @Test
-    public void testRestApi() throws IOException {
+    @Test(dataProvider = "combinations")
+    public void testRestApi(RequestResponseCombination combination) throws IOException {
+        System.out.println(combination);
         HttpRequestBase httpRequestBase = HttpClientUtils.getHTTPBase(combination.getUrl(), combination.getMethod(), combination.getRequest().getPayload());
         HttpResponse response = HttpClientUtils.getHttpClient().execute(httpRequestBase);
         Map<String, String> responseHeaders = convert(response.getAllHeaders());
@@ -82,10 +112,10 @@ public class RestExecutor {
         List expectedJsonAttributes = combination.getResponse().getJsonAttributes();
         //Assertions
         if(0 != combination.getResponse().getStatusCode()){
-            Assert.assertEquals(format("Status Code Should Match"), combination.getResponse().getStatusCode(), response.getStatusLine().getStatusCode());
+            Assert.assertEquals(combination.getResponse().getStatusCode(), response.getStatusLine().getStatusCode(),format("Status Code Should Match", combination));
         }
         if(null != combination.getResponse().getPayload() && !combination.getResponse().getPayload().isEmpty()) {
-            Assert.assertEquals(format("Payload Should match"), combination.getResponse().getPayload(), actualPayload);
+            Assert.assertEquals(combination.getResponse().getPayload().trim(), actualPayload.trim(),format("Payload Should match", combination));
         }
         for(Map.Entry<String, String>  expectedHeader : combination.getResponse().getHeaders().entrySet()){
             //Assert.assertTrue("ActualResponseHeader should contain a key = "+expectedHeader.getKey(), responseHeaders.containsKey(expectedHeader.getKey())); //1. Checking presence oof key
@@ -98,9 +128,9 @@ public class RestExecutor {
 
 
     }
-        //System.out.println(String.format("api = %s", api));
-        //for (Header header : responseHeaders){System.out.println("Key : " + header.getName() + " Value : " + header.getValue());}
-    private String format(String msg){
+    //System.out.println(String.format("api = %s", api));
+    //for (Header header : responseHeaders){System.out.println("Key : " + header.getName() + " Value : " + header.getValue());}
+    private String format(String msg, RequestResponseCombination combination){
         return "TestCaseId = "+combination.getId()+"; "+msg;
     }
 
@@ -112,7 +142,7 @@ public class RestExecutor {
         return map;
     }
 
-    private void digestPayload(boolean isValidationRequired, String content, PayloadStructure payloadStructure, List expectedJsonAttributes,String keyPrefix, String variableName){
+    private void digestPayload(boolean isValidationRequired, String content, PayloadStructure payloadStructure, List expectedJsonAttributes, String keyPrefix, String variableName){
         Object o = null;
         switch(payloadStructure){
             case STRING:
@@ -121,14 +151,14 @@ public class RestExecutor {
                 try {
                     o = new ObjectMapper().readValue(content, String[].class);
                 }catch(IOException e){
-                    Assert.assertTrue("The content is not of type String[] Exception  = "+e.getMessage(), false);
+                    Assert.assertTrue( false,"The content is not of type String[] Exception  = "+e.getMessage());
                 }
                 break;
             case ARRAY_OF_INTEGERS :
                 try {
                     o = new ObjectMapper().readValue(content, Integer[].class);
                 }catch(IOException e){
-                    Assert.assertTrue("The content is not of type Integer[]. Exception = "+e.getMessage(), false);
+                    Assert.assertTrue(false,"The content is not of type Integer[]. Exception = "+e.getMessage());
                 }
                 break;
             case ARRAY_OF_JSON     :
@@ -141,7 +171,7 @@ public class RestExecutor {
                     }
                     o = mapArr;
                 }catch(IOException e){
-                    Assert.assertTrue("The content is not of type Map[]. Exception = "+e.getMessage(), false);
+                    Assert.assertTrue(false,"The content is not of type Map[]. Exception = "+e.getMessage());
                 }
                 break;
             case JSON              :
@@ -152,34 +182,33 @@ public class RestExecutor {
                     }
                     o = actualMap;
                 }catch(IOException e){
-                    Assert.assertTrue("The content is not of type Map. Exception = "+e.getMessage(), false);
+                    Assert.assertTrue(false, "The content is not of type Map. Exception = "+e.getMessage());
                 }
                 break;
         }
-        testCaseVariableMap.put(variableName, o);
+        //testCaseVariableMap.put(variableName, o);
     }
 
 
 
     private void validateJsonStructure(List expectedJsonAttributes, Map<String, Object> actualResponseJsonAsMap,String keyPrefix) throws IOException {
-            for (Object expectedJsonAttribute : expectedJsonAttributes) {
-                if (expectedJsonAttribute instanceof Map) {
-                    Map<String, Object> keyValPair = (Map<String, Object>) expectedJsonAttribute;
-                    for (Map.Entry<String, Object> entry : keyValPair.entrySet()) {
-                        Assert.assertTrue(String.format("The actual response should contain a key with name =  %s%s ",keyPrefix, entry.getKey()), actualResponseJsonAsMap.containsKey(entry.getKey()));
-                        if (entry.getValue() instanceof List) {
-                            validateJsonStructure((List) entry.getValue(), (Map) actualResponseJsonAsMap.get(entry.getKey()),keyPrefix+entry.getKey()+"." );
-                        } else {
-                            Assert.assertEquals(String.format("The value of key = '%s%s' should match with expectedValue",keyPrefix,entry.getKey()), entry.getValue(), actualResponseJsonAsMap.get(entry.getKey()));
-                        }
+        for (Object expectedJsonAttribute : expectedJsonAttributes) {
+            if (expectedJsonAttribute instanceof Map) {
+                Map<String, Object> keyValPair = (Map<String, Object>) expectedJsonAttribute;
+                for (Map.Entry<String, Object> entry : keyValPair.entrySet()) {
+                    Assert.assertTrue(actualResponseJsonAsMap.containsKey(entry.getKey()),String.format("The actual response should contain a key with name =  %s%s ",keyPrefix, entry.getKey()));
+                    if (entry.getValue() instanceof List) {
+                        validateJsonStructure((List) entry.getValue(), (Map) actualResponseJsonAsMap.get(entry.getKey()),keyPrefix+entry.getKey()+"." );
+                    } else {
+                        Assert.assertEquals(entry.getValue(), actualResponseJsonAsMap.get(entry.getKey()),String.format("The value of key = '%s%s' should match with expectedValue",keyPrefix,entry.getKey()));
                     }
-                } else if (expectedJsonAttribute instanceof String) {
-                    Assert.assertTrue("The json response should contain key = " + expectedJsonAttribute, actualResponseJsonAsMap.containsKey(expectedJsonAttribute));
-
-                } else {
-                    throw new IllegalArgumentException(String.format("o of class = %s, is not handled", expectedJsonAttribute.getClass()));
                 }
+            } else if (expectedJsonAttribute instanceof String) {
+                Assert.assertTrue(actualResponseJsonAsMap.containsKey(expectedJsonAttribute),"The json response should contain key = " + expectedJsonAttribute);
+
+            } else {
+                throw new IllegalArgumentException(String.format("o of class = %s, is not handled", expectedJsonAttribute.getClass()));
             }
         }
     }
-
+}

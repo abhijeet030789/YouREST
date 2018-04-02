@@ -1,8 +1,7 @@
+package dto;
+
 import lombok.Data;
 import org.dwiveddi.utils.csv.annotation.CsvMapped;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by dwiveddi on 2/6/2018.
@@ -19,7 +18,7 @@ public class RequestResponseCombination {
 
     @Override
     public String toString() {
-        return "RequestResponseCombination{" +
+        return "dto.RequestResponseCombination{" +
                 "id='" + id + '\'' +
                 ", url='" + url + '\'' +
                 ", method='" + method + '\'' +

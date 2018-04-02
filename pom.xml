@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.divya</groupId>
+    <groupId>com.dwiveddi</groupId>
     <artifactId>rest-api-test</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
@@ -22,13 +22,49 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+            <!-- Maven Assembly Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.4.1</version>
+                <configuration>
+                    <!-- get all project dependencies -->
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <!-- MainClass in mainfest make a executable jar -->
+                    <archive>
+                        <manifest>
+                            <mainClass>RestExecutor</mainClass>
+                        </manifest>
+                    </archive>
+
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <!-- bind to the packaging phase -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
+
     </build>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.8.7</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
@@ -56,7 +92,7 @@
             <version>1.3.2</version>
         </dependency>
         <dependency>
-            <groupId>org.dwiveddi</groupId>
+            <groupId>com.dwiveddi</groupId>
             <artifactId>generic-automation</artifactId>
             <version>1.0</version>
         </dependency>
