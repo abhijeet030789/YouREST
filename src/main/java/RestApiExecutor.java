@@ -66,7 +66,6 @@ public class RestApiExecutor {
     }
 
 
-    //@Parameterized.Parameters
     public List<RequestResponseCombination> data(String filePath) throws IOException {
         File file =  new File(filePath);
         Api[] apiArr = new ObjectMapper().readValue(file, Api[].class);
@@ -96,10 +95,7 @@ public class RestApiExecutor {
         }
         return listOfCombinations;
     }
-   /* public RestExecutor(dto.RequestResponseCombination combination) {
-        super();
-        this.combination = combination;
-    }*/
+
 
     @Test(dataProvider = "combinations")
     public void testRestApi(RequestResponseCombination combination) throws IOException {
@@ -115,7 +111,9 @@ public class RestApiExecutor {
             Assert.assertEquals(combination.getResponse().getStatusCode(), response.getStatusLine().getStatusCode(),format("Status Code Should Match", combination));
         }
         if(null != combination.getResponse().getPayload() && !combination.getResponse().getPayload().isEmpty()) {
-            Assert.assertEquals(combination.getResponse().getPayload().trim(), actualPayload.trim(),format("Payload Should match", combination));
+            String expected = jsonOneLine(combination.getResponse().getPayload());
+            String actual = jsonOneLine(actualPayload);
+            Assert.assertEquals(expected, actual,format("Payload Should match", combination));
         }
         for(Map.Entry<String, String>  expectedHeader : combination.getResponse().getHeaders().entrySet()){
             //Assert.assertTrue("ActualResponseHeader should contain a key = "+expectedHeader.getKey(), responseHeaders.containsKey(expectedHeader.getKey())); //1. Checking presence oof key
@@ -128,8 +126,7 @@ public class RestApiExecutor {
 
 
     }
-    //System.out.println(String.format("api = %s", api));
-    //for (Header header : responseHeaders){System.out.println("Key : " + header.getName() + " Value : " + header.getValue());}
+
     private String format(String msg, RequestResponseCombination combination){
         return "TestCaseId = "+combination.getId()+"; "+msg;
     }
@@ -189,8 +186,6 @@ public class RestApiExecutor {
         //testCaseVariableMap.put(variableName, o);
     }
 
-
-
     private void validateJsonStructure(List expectedJsonAttributes, Map<String, Object> actualResponseJsonAsMap,String keyPrefix) throws IOException {
         for (Object expectedJsonAttribute : expectedJsonAttributes) {
             if (expectedJsonAttribute instanceof Map) {
@@ -210,5 +205,9 @@ public class RestApiExecutor {
                 throw new IllegalArgumentException(String.format("o of class = %s, is not handled", expectedJsonAttribute.getClass()));
             }
         }
+    }
+
+    private String jsonOneLine(String s) {
+        return s.trim().replaceAll(" ","").replaceAll("\\n","");
     }
 }

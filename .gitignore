@@ -1,6 +1,6 @@
 target/
 .idea/
-*.iml
+rest-api-test.iml
 dependency-reduced-pom.xml
 generic-automation.iml
 test-output/

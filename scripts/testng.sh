@@ -1,1 +1,1 @@
-java -DconfDir=$1 -cp .:target/rest-api-test-jar-with-dependencies.jar org.testng.TestNG conf/testng.xml
+java -DconfDir=$1 -cp target/rest-api-test-jar-with-dependencies.jar org.testng.TestNG conf/testng.xml
