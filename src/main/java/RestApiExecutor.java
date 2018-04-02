@@ -11,6 +11,7 @@ import org.dwiveddi.utils.excel.ExcelMapper;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import templateengine.FreemarkerTemplateEngine;
 import utils.HttpClientUtils;
 
 import java.io.File;
@@ -34,7 +35,7 @@ public class RestApiExecutor {
                 if (filePath.endsWith(".json")) {
                     combinations.addAll(data(filePath));
                 } else if (filePath.endsWith(".xlsx")) {
-                    combinations.addAll(excelMapper.getList(filePath, 12, 2));
+                    combinations.addAll(excelMapper.getList(filePath, 13, 2));
                 }
             }
             List<Object[]> list = new ArrayList<>();
@@ -99,7 +100,10 @@ public class RestApiExecutor {
 
     @Test(dataProvider = "combinations")
     public void testRestApi(RequestResponseCombination combination) throws IOException {
-        System.out.println(combination);
+        System.out.println("BEFORE : " + combination);
+        combination.format(FreemarkerTemplateEngine.getInstance().getGlobalMap());
+        System.out.println("AFTER  : " + combination);
+
         HttpRequestBase httpRequestBase = HttpClientUtils.getHTTPBase(combination.getUrl(), combination.getMethod(), combination.getRequest().getPayload());
         HttpResponse response = HttpClientUtils.getHttpClient().execute(httpRequestBase);
         Map<String, String> responseHeaders = convert(response.getAllHeaders());
@@ -183,7 +187,7 @@ public class RestApiExecutor {
                 }
                 break;
         }
-        //testCaseVariableMap.put(variableName, o);
+        FreemarkerTemplateEngine.getInstance().putToGlobalMap(variableName, o);
     }
 
     private void validateJsonStructure(List expectedJsonAttributes, Map<String, Object> actualResponseJsonAsMap,String keyPrefix) throws IOException {

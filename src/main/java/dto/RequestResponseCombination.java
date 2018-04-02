@@ -2,6 +2,9 @@ package dto;
 
 import lombok.Data;
 import org.dwiveddi.utils.csv.annotation.CsvMapped;
+import templateengine.FreemarkerTemplateEngine;
+
+import java.util.Map;
 
 /**
  * Created by dwiveddi on 2/6/2018.
@@ -9,12 +12,21 @@ import org.dwiveddi.utils.csv.annotation.CsvMapped;
 @Data
 public class RequestResponseCombination {
 
+    private static final FreemarkerTemplateEngine engine = FreemarkerTemplateEngine.getInstance();
+
     @CsvMapped.Column(index = 0) private String id;
     @CsvMapped.Column(index = 1) private String url;
     @CsvMapped.Column(index = 2) private String method;
     @CsvMapped.NestedColumn(index = {3,4,5}) private Request request;
-    @CsvMapped.NestedColumn(index = {6,7,8})private Response response;
-    @CsvMapped.Column(index = 9) private String variableName;
+    @CsvMapped.NestedColumn(index = {6,7,8,9,10,11})private Response response;
+    @CsvMapped.Column(index = 12) private String variableName;
+
+    public void format(Map<String, Object> map){
+        this.url = engine.generate(this.url, map);
+        this.method = engine.generate(this.method, map);
+        this.request.format(map);
+        this.response.format(map);
+    }
 
     @Override
     public String toString() {
