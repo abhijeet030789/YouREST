@@ -1,13 +1,17 @@
 package utils;
 
+import org.apache.http.Header;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -34,7 +38,7 @@ public class HttpClientUtils {
         return httpClient;
     }
 
-    public static HttpRequestBase getHTTPBase(String path, String httpMethod, String payload) throws UnsupportedEncodingException {
+    public static HttpRequestBase getHTTPBase(String path, String httpMethod,Map<String,String> headers, String payload) throws UnsupportedEncodingException {
         HttpRequestBase httpRequestBase = null;
         switch (httpMethod){
             case "GET" :  httpRequestBase =  new HttpGet(path); break;
@@ -50,7 +54,27 @@ public class HttpClientUtils {
                 httpEntityEnclosingRequestBase.setEntity(new StringEntity(payload));
             }
         }
+        if(null != headers) {
+            httpRequestBase.setHeaders(convert(headers));
+        }
         return httpRequestBase;
+    }
+
+    public static Map<String, String> convert(Header[] headers){
+        Map<String, String> map = new HashMap<>();
+        for (Header header : headers) {
+            map.put(header.getName(), header.getValue());
+        }
+        return map;
+    }
+
+    public static Header[] convert(Map<String, String> map){
+        Header[] headers = new Header[map.size()];
+        int i = 0;
+        for (Map.Entry<String, String> entry :  map.entrySet()) {
+            headers[i++] = new BasicHeader(entry.getKey(), entry.getValue());
+        }
+        return headers;
     }
 
 

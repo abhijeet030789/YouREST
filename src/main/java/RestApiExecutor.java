@@ -18,8 +18,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import static utils.HttpClientUtils.convert;
+import static utils.HttpClientUtils.getHTTPBase;
+import static utils.HttpClientUtils.getHttpClient;
+
 public class RestApiExecutor {
-    private static HttpClient httpClient = HttpClientUtils.getHttpClient();
+    private static HttpClient httpClient = getHttpClient();
     String keyPrefix = "";
 
 
@@ -103,27 +107,27 @@ public class RestApiExecutor {
         System.out.println("BEFORE : " + combination);
         combination.format(FreemarkerTemplateEngine.getInstance().getGlobalMap());
         System.out.println("AFTER  : " + combination);
-
-        HttpRequestBase httpRequestBase = HttpClientUtils.getHTTPBase(combination.getUrl(), combination.getMethod(), combination.getRequest().getPayload());
-        HttpResponse response = HttpClientUtils.getHttpClient().execute(httpRequestBase);
+        Map<String,String> requestHeaders = combination.getRequest().getHeaders();
+        HttpRequestBase httpRequestBase = getHTTPBase(combination.getUrl(), combination.getMethod(), combination.getRequest().getHeaders(), combination.getRequest().getPayload());
+        HttpResponse response = getHttpClient().execute(httpRequestBase);
         Map<String, String> responseHeaders = convert(response.getAllHeaders());
         int expectedStatusCode= combination.getResponse().getStatusCode();
         String actualPayload = IOUtils.toString(response.getEntity().getContent());
         List expectedJsonAttributes = combination.getResponse().getJsonAttributes();
         //Assertions
         if(0 != combination.getResponse().getStatusCode()){
-            Assert.assertEquals(combination.getResponse().getStatusCode(), response.getStatusLine().getStatusCode(),format("Status Code Should Match", combination));
+            Assert.assertEquals(response.getStatusLine().getStatusCode(),combination.getResponse().getStatusCode(),format("Status Code Should Match", combination));
         }
         if(null != combination.getResponse().getPayload() && !combination.getResponse().getPayload().isEmpty()) {
             String expected = jsonOneLine(combination.getResponse().getPayload());
             String actual = jsonOneLine(actualPayload);
-            Assert.assertEquals(expected, actual,format("Payload Should match", combination));
+            Assert.assertEquals(actual,expected,format("Payload Should match", combination));
         }
         for(Map.Entry<String, String>  expectedHeader : combination.getResponse().getHeaders().entrySet()){
             //Assert.assertTrue("ActualResponseHeader should contain a key = "+expectedHeader.getKey(), responseHeaders.containsKey(expectedHeader.getKey())); //1. Checking presence oof key
             String expectedValue = expectedHeader.getValue();
             String actualValue = responseHeaders.get(expectedHeader.getKey());
-            Assert.assertEquals(expectedValue, actualValue);  //2. Match values
+            Assert.assertEquals( actualValue, expectedValue);  //2. Match values
         }
         digestPayload(combination.getResponse().isPayloadJsonValdationRequired(), actualPayload, combination.getResponse().getPayloadStructure()
                 , expectedJsonAttributes, keyPrefix, combination.getVariableName());
@@ -135,13 +139,7 @@ public class RestApiExecutor {
         return "TestCaseId = "+combination.getId()+"; "+msg;
     }
 
-    private Map<String, String> convert(Header[] headers){
-        Map<String, String> map = new HashMap<>();
-        for (Header header : headers) {
-            map.put(header.getName(), header.getValue());
-        }
-        return map;
-    }
+
 
     private void digestPayload(boolean isValidationRequired, String content, PayloadStructure payloadStructure, List expectedJsonAttributes, String keyPrefix, String variableName){
         Object o = null;
@@ -199,7 +197,7 @@ public class RestApiExecutor {
                     if (entry.getValue() instanceof List) {
                         validateJsonStructure((List) entry.getValue(), (Map) actualResponseJsonAsMap.get(entry.getKey()),keyPrefix+entry.getKey()+"." );
                     } else {
-                        Assert.assertEquals(entry.getValue(), actualResponseJsonAsMap.get(entry.getKey()),String.format("The value of key = '%s%s' should match with expectedValue",keyPrefix,entry.getKey()));
+                        Assert.assertEquals(actualResponseJsonAsMap.get(entry.getKey()),entry.getValue(),String.format("The value of key = '%s%s' should match with expectedValue",keyPrefix,entry.getKey()));
                     }
                 }
             } else if (expectedJsonAttribute instanceof String) {
