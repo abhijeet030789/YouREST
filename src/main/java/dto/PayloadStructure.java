@@ -9,5 +9,6 @@ public enum PayloadStructure {
     JSON,
     ARRAY_OF_STRING,
     ARRAY_OF_JSON,
-    ARRAY_OF_INTEGERS
+    ARRAY_OF_INTEGERS,
+    ARRAY
 }

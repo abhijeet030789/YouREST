@@ -188,23 +188,50 @@ public class RestApiExecutor {
         FreemarkerTemplateEngine.getInstance().putToGlobalMap(variableName, o);
     }
 
-    private void validateJsonStructure(List expectedJsonAttributes, Map<String, Object> actualResponseJsonAsMap,String keyPrefix) throws IOException {
-        for (Object expectedJsonAttribute : expectedJsonAttributes) {
-            if (expectedJsonAttribute instanceof Map) {
-                Map<String, Object> keyValPair = (Map<String, Object>) expectedJsonAttribute;
-                for (Map.Entry<String, Object> entry : keyValPair.entrySet()) {
-                    Assert.assertTrue(actualResponseJsonAsMap.containsKey(entry.getKey()),String.format("The actual response should contain a key with name =  %s%s ",keyPrefix, entry.getKey()));
-                    if (entry.getValue() instanceof List) {
-                        validateJsonStructure((List) entry.getValue(), (Map) actualResponseJsonAsMap.get(entry.getKey()),keyPrefix+entry.getKey()+"." );
+    private void validateJsonStructure(List expectedJsonAttributes, Object objectToValidate,String keyPrefix) throws IOException {
+        PayloadStructure payloadStructure = null;
+        List list = new ArrayList<>();
+        if(objectToValidate instanceof  Map){
+            list.add(objectToValidate);
+            payloadStructure = PayloadStructure.JSON;
+        }else if(objectToValidate instanceof List){
+            list = (List)objectToValidate;
+            if(list.size() == 0){
+                return ;
+            }else{
+                if(list.get(0) instanceof Map){
+                    payloadStructure = PayloadStructure.ARRAY_OF_JSON;
+                }else{
+                    payloadStructure = PayloadStructure.ARRAY;
+                }
+            }
+        }
+        if(payloadStructure.equals(PayloadStructure.ARRAY_OF_JSON) || payloadStructure.equals(PayloadStructure.JSON)){
+            for(Object o : list){
+                Map actualResponseJsonAsMap = (Map) o;
+                for (Object expectedJsonAttribute : expectedJsonAttributes) {
+                    if (expectedJsonAttribute instanceof Map) {
+                        Map<String, Object> expectedKeyValPair = (Map<String, Object>) expectedJsonAttribute;
+                        for (Map.Entry<String, Object> expectedEntry : expectedKeyValPair.entrySet()) {
+                            Assert.assertTrue(actualResponseJsonAsMap.containsKey(expectedEntry.getKey()),String.format("The actual response should contain a key with name =  %s%s ", keyPrefix, expectedEntry.getKey()));
+                            if (expectedEntry.getValue() instanceof List) {
+                                validateJsonStructure((List) expectedEntry.getValue(), actualResponseJsonAsMap.get(expectedEntry.getKey()),keyPrefix+expectedEntry.getKey()+"." );
+                            } else {
+                                Assert.assertEquals(actualResponseJsonAsMap.get(expectedEntry.getKey()),expectedEntry.getValue(),
+                                        String.format("The value of key = '%s%s' should match with expectedValue",keyPrefix,expectedEntry.getKey())
+                                );
+                            }
+                        }
+                    } else if (expectedJsonAttribute instanceof String) {
+                        Assert.assertTrue(actualResponseJsonAsMap.containsKey(expectedJsonAttribute),"The json response should contain key = " + expectedJsonAttribute);
                     } else {
-                        Assert.assertEquals(actualResponseJsonAsMap.get(entry.getKey()),entry.getValue(),String.format("The value of key = '%s%s' should match with expectedValue",keyPrefix,entry.getKey()));
+                        throw new IllegalArgumentException(String.format("o of class = %s, is not handled", expectedJsonAttribute.getClass()));
                     }
                 }
-            } else if (expectedJsonAttribute instanceof String) {
-                Assert.assertTrue(actualResponseJsonAsMap.containsKey(expectedJsonAttribute),"The json response should contain key = " + expectedJsonAttribute);
-
-            } else {
-                throw new IllegalArgumentException(String.format("o of class = %s, is not handled", expectedJsonAttribute.getClass()));
+            }
+        }else if(payloadStructure.equals(PayloadStructure.ARRAY)){
+            for (Object expectedJsonAttribute : expectedJsonAttributes) {
+                Assert.assertTrue(list.contains(expectedJsonAttribute), String.format("The value of key = '%s', which is a List/Array should contain expectedValue = '%s'", keyPrefix, expectedJsonAttribute));
             }
         }
     }
