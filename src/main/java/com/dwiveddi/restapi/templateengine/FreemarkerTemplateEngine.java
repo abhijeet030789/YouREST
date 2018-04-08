@@ -1,12 +1,13 @@
-package templateengine;
+package com.dwiveddi.restapi.templateengine;
 import freemarker.template.*;
+import org.codehaus.jackson.map.ObjectMapper;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by dwiveddi on 4/2/2018.
@@ -14,6 +15,7 @@ import java.util.Map;
 public class FreemarkerTemplateEngine {
 
     private static final Map<String, Object> GLOBAL_MAP =  new HashMap<>();
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public void putToGlobalMap(String key, Object value){
         GLOBAL_MAP.put(key, value);
@@ -49,6 +51,7 @@ public class FreemarkerTemplateEngine {
 
     public String generate(String templateSource, Map<String, Object> data) {
         try {
+            data.put("uuid", (TemplateMethodModelEx)(list) -> UUID.randomUUID().toString().replaceAll("-", ""));
             Template e = new Template("", templateSource, this.configuration);
             StringWriter generatedOutput = new StringWriter();
             e.process(data, generatedOutput);

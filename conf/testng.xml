@@ -4,7 +4,7 @@
 
     <test name="RestExecutor-Group">
         <classes>
-        <class name="RestApiExecutor"/>
+        <class name="com.dwiveddi.restapi.RestApiRunner.RestApiExecutor"/>
         </classes>
       <!--  <packages>
             <package name=""/>

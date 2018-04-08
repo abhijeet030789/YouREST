@@ -1,37 +1,44 @@
-import dto.Api;
-import dto.PayloadStructure;
-import dto.RequestResponseCombination;
+package com.dwiveddi.restapi;
+
+import com.dwiveddi.restapi.dto.Api;
+import com.dwiveddi.restapi.dto.PayloadStructure;
+import com.dwiveddi.restapi.dto.RequestResponseCombination;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.dwiveddi.utils.excel.ExcelMapper;
+import com.dwiveddi.mapper.excel.ExcelMapper;
 import org.testng.Assert;
+import org.testng.Reporter;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import templateengine.FreemarkerTemplateEngine;
-import utils.HttpClientUtils;
+import com.dwiveddi.restapi.templateengine.FreemarkerTemplateEngine;
+import com.dwiveddi.restapi.utils.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static utils.HttpClientUtils.convert;
-import static utils.HttpClientUtils.getHTTPBase;
-import static utils.HttpClientUtils.getHttpClient;
+import static com.dwiveddi.restapi.utils.HttpClientUtils.convertHeadersListToMap;
+import static com.dwiveddi.restapi.utils.HttpClientUtils.getHTTPBase;
+import static com.dwiveddi.restapi.utils.HttpClientUtils.getHttpClient;
 
+/**
+ * Created by dwiveddi on 4/6/2018.
+ */
 public class RestApiExecutor {
     private static HttpClient httpClient = getHttpClient();
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     String keyPrefix = "";
-
 
     @DataProvider(name = "combinations")
     public Iterator<Object[]> dataFromConfigFiles()  {
         try {
+            String generated = FreemarkerTemplateEngine.getInstance().generate(FileUtils.readFileAsString(System.getProperty("confFile")), new HashMap<>());
+            FreemarkerTemplateEngine.getInstance().getGlobalMap().putAll(OBJECT_MAPPER.readValue(generated, Map.class));
             List<RequestResponseCombination> combinations = new ArrayList<>();
-            String confDir = System.getProperty("confDir");
+            String confDir = System.getProperty("testFile");
             List<String> listOfFilePaths = new ArrayList<>();
             populateFileNames(confDir, listOfFilePaths, new String[]{".xlsx", ".json"});
             ExcelMapper<RequestResponseCombination> excelMapper = new ExcelMapper<RequestResponseCombination>(RequestResponseCombination.class);
@@ -39,7 +46,14 @@ public class RestApiExecutor {
                 if (filePath.endsWith(".json")) {
                     combinations.addAll(data(filePath));
                 } else if (filePath.endsWith(".xlsx")) {
-                    combinations.addAll(excelMapper.getList(filePath, 13, 2));
+                    String sheetsToIgnore = System.getProperty("sheetsToIgnore");
+                    Set<String> set = null;
+                    if(null == sheetsToIgnore || sheetsToIgnore.isEmpty()){
+                        set = new HashSet<>();
+                    }else{
+                        set = OBJECT_MAPPER.readValue(sheetsToIgnore, Set.class);
+                    }
+                    combinations.addAll(excelMapper.getListByIgnoringSheetNames(filePath,set, 13, 2));
                 }
             }
             List<Object[]> list = new ArrayList<>();
@@ -69,7 +83,6 @@ public class RestApiExecutor {
             }
         }
     }
-
 
     public List<RequestResponseCombination> data(String filePath) throws IOException {
         File file =  new File(filePath);
@@ -101,29 +114,26 @@ public class RestApiExecutor {
         return listOfCombinations;
     }
 
-
     @Test(dataProvider = "combinations")
     public void testRestApi(RequestResponseCombination combination) throws IOException {
-        System.out.println("BEFORE : " + combination);
         combination.format(FreemarkerTemplateEngine.getInstance().getGlobalMap());
-        System.out.println("AFTER  : " + combination);
-        Map<String,String> requestHeaders = combination.getRequest().getHeaders();
-        HttpRequestBase httpRequestBase = getHTTPBase(combination.getUrl(), combination.getMethod(), combination.getRequest().getHeaders(), combination.getRequest().getPayload());
+        HttpRequestBase httpRequestBase = getHTTPBase(combination.getUrl(), combination.getMethod(),combination.getRequest().getQueryParams(), convertToMap(combination.getRequest().getHeaders()), combination.getRequest().getPayload());
         HttpResponse response = getHttpClient().execute(httpRequestBase);
-        Map<String, String> responseHeaders = convert(response.getAllHeaders());
+        Map<String, String> responseHeaders = convertHeadersListToMap(response.getAllHeaders());
         int expectedStatusCode= combination.getResponse().getStatusCode();
         String actualPayload = IOUtils.toString(response.getEntity().getContent());
+        Reporter.log("actualPayload = " + actualPayload);
         List expectedJsonAttributes = combination.getResponse().getJsonAttributes();
         //Assertions
         if(0 != combination.getResponse().getStatusCode()){
-            Assert.assertEquals(response.getStatusLine().getStatusCode(),combination.getResponse().getStatusCode(),format("Status Code Should Match", combination));
+            Assert.assertEquals(response.getStatusLine().getStatusCode(), combination.getResponse().getStatusCode(), format("Status Code Should Match", combination));
         }
         if(null != combination.getResponse().getPayload() && !combination.getResponse().getPayload().isEmpty()) {
             String expected = jsonOneLine(combination.getResponse().getPayload());
             String actual = jsonOneLine(actualPayload);
             Assert.assertEquals(actual,expected,format("Payload Should match", combination));
         }
-        for(Map.Entry<String, String>  expectedHeader : combination.getResponse().getHeaders().entrySet()){
+        for(Map.Entry<String, String>  expectedHeader : convertToMap(combination.getResponse().getHeaders()).entrySet()){
             //Assert.assertTrue("ActualResponseHeader should contain a key = "+expectedHeader.getKey(), responseHeaders.containsKey(expectedHeader.getKey())); //1. Checking presence oof key
             String expectedValue = expectedHeader.getValue();
             String actualValue = responseHeaders.get(expectedHeader.getKey());
@@ -135,11 +145,16 @@ public class RestApiExecutor {
 
     }
 
+    private Map<String, String> convertToMap(String headers) throws IOException {
+        if (!headers.isEmpty()) {
+            return OBJECT_MAPPER.readValue(headers, Map.class);
+        }
+        return new HashMap<>();
+    }
+
     private String format(String msg, RequestResponseCombination combination){
         return "TestCaseId = "+combination.getId()+"; "+msg;
     }
-
-
 
     private void digestPayload(boolean isValidationRequired, String content, PayloadStructure payloadStructure, List expectedJsonAttributes, String keyPrefix, String variableName){
         Object o = null;

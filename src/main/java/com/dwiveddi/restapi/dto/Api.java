@@ -1,4 +1,4 @@
-package dto;
+package com.dwiveddi.restapi.dto;
 
 import lombok.Data;
 
@@ -18,7 +18,7 @@ public class Api {
 
     @Override
     public String toString() {
-        return "dto.Api{" +
+        return "com.dwiveddi.restapi.dto.Api{" +
                 "defaultUrl='" + defaultUrl + '\'' +
                 ", defaultMethod='" + defaultMethod + '\'' +
                 ", defaultRequest=" + defaultRequest +

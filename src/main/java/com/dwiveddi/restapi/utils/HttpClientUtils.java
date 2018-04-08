@@ -1,4 +1,4 @@
-package utils;
+package com.dwiveddi.restapi.utils;
 
 import org.apache.http.Header;
 import org.apache.http.client.HttpClient;
@@ -21,9 +21,9 @@ public class HttpClientUtils {
 
     public static HttpClient getHttpClient() {
         RequestConfig globalConfig =  RequestConfig.custom()
-                        .setConnectTimeout(1000)
-                        .setConnectionRequestTimeout(1000)
-                        .setSocketTimeout(5000)
+                        .setConnectTimeout(1000*10) //10 sec, connection establishment timeout
+                        .setConnectionRequestTimeout(1000 * 10) //10sec , connect request time, ping response from server
+                        .setSocketTimeout(6000 * 10) //60 secs, wait for the response to come from server
                         .setCookieSpec(CookieSpecs.DEFAULT)
                         .setRedirectsEnabled(false)
                         .build();
@@ -38,8 +38,15 @@ public class HttpClientUtils {
         return httpClient;
     }
 
-    public static HttpRequestBase getHTTPBase(String path, String httpMethod,Map<String,String> headers, String payload) throws UnsupportedEncodingException {
+    public static HttpRequestBase getHTTPBase(String path, String httpMethod,String queryParams,Map<String,String> headers, String payload) throws UnsupportedEncodingException {
         HttpRequestBase httpRequestBase = null;
+        if(null!= queryParams){
+            if(queryParams.startsWith("?")){
+                path = path + queryParams;
+            }else {
+                path = path + "?" + queryParams;
+            }
+        }
         switch (httpMethod){
             case "GET" :  httpRequestBase =  new HttpGet(path); break;
             case "POST": httpRequestBase = new HttpPost(path); break;
@@ -55,12 +62,13 @@ public class HttpClientUtils {
             }
         }
         if(null != headers) {
-            httpRequestBase.setHeaders(convert(headers));
+            httpRequestBase.setHeaders(convertHeaderMapToList(headers));
         }
+
         return httpRequestBase;
     }
 
-    public static Map<String, String> convert(Header[] headers){
+    public static Map<String, String> convertHeadersListToMap(Header[] headers){
         Map<String, String> map = new HashMap<>();
         for (Header header : headers) {
             map.put(header.getName(), header.getValue());
@@ -68,7 +76,7 @@ public class HttpClientUtils {
         return map;
     }
 
-    public static Header[] convert(Map<String, String> map){
+    public static Header[] convertHeaderMapToList(Map<String, String> map){
         Header[] headers = new Header[map.size()];
         int i = 0;
         for (Map.Entry<String, String> entry :  map.entrySet()) {

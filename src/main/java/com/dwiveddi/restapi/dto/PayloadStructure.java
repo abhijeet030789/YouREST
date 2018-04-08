@@ -1,4 +1,4 @@
-package dto;
+package com.dwiveddi.restapi.dto;
 
 /**
  * Created by dwiveddi on 2/16/2018.

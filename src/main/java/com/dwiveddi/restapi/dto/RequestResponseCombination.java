@@ -1,8 +1,8 @@
-package dto;
+package com.dwiveddi.restapi.dto;
 
+import com.dwiveddi.mapper.csv.annotation.CsvMapped;
 import lombok.Data;
-import org.dwiveddi.utils.csv.annotation.CsvMapped;
-import templateengine.FreemarkerTemplateEngine;
+import com.dwiveddi.restapi.templateengine.FreemarkerTemplateEngine;
 
 import java.util.Map;
 
@@ -30,7 +30,7 @@ public class RequestResponseCombination {
 
     @Override
     public String toString() {
-        return "dto.RequestResponseCombination{" +
+        return "com.dwiveddi.restapi.dto.RequestResponseCombination{" +
                 "id='" + id + '\'' +
                 ", url='" + url + '\'' +
                 ", method='" + method + '\'' +
