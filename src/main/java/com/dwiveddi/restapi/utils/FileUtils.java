@@ -1,6 +1,7 @@
 package com.dwiveddi.restapi.utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -18,5 +19,16 @@ public class FileUtils {
             sb.append(line).append("\n");
         }
         return sb.toString();
+    }
+
+    public static void validateFileExists(String filepath, boolean isDirAccepted){
+        File file = new File(filepath);
+        if (!file.exists()){
+            throw new IllegalArgumentException("File not found filePath = "+ filepath );
+        }if(!isDirAccepted){
+            if(file.isDirectory()){
+                throw new IllegalArgumentException("File is a Directory = "+ filepath);
+            }
+        }
     }
 }
