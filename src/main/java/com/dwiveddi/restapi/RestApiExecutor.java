@@ -2,6 +2,7 @@ package com.dwiveddi.restapi;
 
 import com.dwiveddi.restapi.dto.Api;
 import com.dwiveddi.restapi.dto.PayloadStructure;
+import com.dwiveddi.restapi.dto.Request;
 import com.dwiveddi.restapi.dto.RequestResponseCombination;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -35,8 +36,11 @@ public class RestApiExecutor {
     @DataProvider(name = "combinations")
     public Iterator<Object[]> dataFromConfigFiles()  {
         try {
-            String generated = FreemarkerTemplateEngine.getInstance().generate(FileUtils.readFileAsString(System.getProperty("confFile")), new HashMap<>());
-            FreemarkerTemplateEngine.getInstance().getGlobalMap().putAll(OBJECT_MAPPER.readValue(generated, Map.class));
+            String confFile = System.getProperty("confFile");
+            if(null != confFile) {
+                String generated = FreemarkerTemplateEngine.getInstance().generate(FileUtils.readFileAsString(confFile), new HashMap<>());
+                FreemarkerTemplateEngine.getInstance().getGlobalMap().putAll(OBJECT_MAPPER.readValue(generated, Map.class));
+            }
             List<RequestResponseCombination> combinations = new ArrayList<>();
             String confDir = System.getProperty("testFile");
             List<String> listOfFilePaths = new ArrayList<>();
@@ -44,7 +48,7 @@ public class RestApiExecutor {
             ExcelMapper<RequestResponseCombination> excelMapper = new ExcelMapper<RequestResponseCombination>(RequestResponseCombination.class);
             for (String filePath : listOfFilePaths) {
                 if (filePath.endsWith(".json")) {
-                    combinations.addAll(data(filePath));
+                    //combinations.addAll(data(filePath));
                 } else if (filePath.endsWith(".xlsx")) {
                     String sheetsToIgnore = System.getProperty("sheetsToIgnore");
                     Set<String> set = null;
@@ -53,7 +57,11 @@ public class RestApiExecutor {
                     }else{
                         set = OBJECT_MAPPER.readValue(sheetsToIgnore, Set.class);
                     }
-                    combinations.addAll(excelMapper.getListByIgnoringSheetNames(filePath,set, 13, 2));
+                    List<RequestResponseCombination> list = excelMapper.getListByIgnoringSheetNames(filePath, set, 13, 2);
+                    for(RequestResponseCombination combination : list){
+                        combination.setSource(filePath);
+                    }
+                    combinations.addAll(list);
                 }
             }
             List<Object[]> list = new ArrayList<>();
@@ -84,7 +92,7 @@ public class RestApiExecutor {
         }
     }
 
-    public List<RequestResponseCombination> data(String filePath) throws IOException {
+    /*public List<RequestResponseCombination> data(String filePath) throws IOException {
         File file =  new File(filePath);
         Api[] apiArr = new ObjectMapper().readValue(file, Api[].class);
         List<RequestResponseCombination> listOfCombinations = new ArrayList<>();
@@ -112,7 +120,7 @@ public class RestApiExecutor {
             }
         }
         return listOfCombinations;
-    }
+    }*/
 
     @Test(dataProvider = "combinations")
     public void testRestApi(RequestResponseCombination combination) throws IOException {

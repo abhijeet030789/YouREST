@@ -13,7 +13,7 @@ import java.util.Map;
 public class RequestResponseCombination {
 
     private static final FreemarkerTemplateEngine engine = FreemarkerTemplateEngine.getInstance();
-
+    private String source;
     @CsvMapped.Column(index = 0) private String id;
     @CsvMapped.Column(index = 1) private String url;
     @CsvMapped.Column(index = 2) private String method;
@@ -30,8 +30,9 @@ public class RequestResponseCombination {
 
     @Override
     public String toString() {
-        return "com.dwiveddi.restapi.dto.RequestResponseCombination{" +
-                "id='" + id + '\'' +
+        return "RequestResponseCombination{" +
+                "source='" + source + '\'' +
+                ", id='" + id + '\'' +
                 ", url='" + url + '\'' +
                 ", method='" + method + '\'' +
                 ", request=" + request +
@@ -86,5 +87,13 @@ public class RequestResponseCombination {
 
     public void setVariableName(String variableName) {
         this.variableName = variableName;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 }
