@@ -125,7 +125,7 @@ public class RestApiExecutor {
     @Test(dataProvider = "combinations")
     public void testRestApi(RequestResponseCombination combination) throws IOException {
         combination.format(FreemarkerTemplateEngine.getInstance().getGlobalMap());
-        HttpRequestBase httpRequestBase = getHTTPBase(combination.getUrl(), combination.getMethod(),combination.getRequest().getQueryParams(), convertToMap(combination.getRequest().getHeaders()), combination.getRequest().getPayload());
+        HttpRequestBase httpRequestBase = getHTTPBase(combination.getUrl().trim(), combination.getMethod(),combination.getRequest().getQueryParams(), convertToMap(combination.getRequest().getHeaders()), combination.getRequest().getPayload());
         HttpResponse response = getHttpClient().execute(httpRequestBase);
         Map<String, String> responseHeaders = convertHeadersListToMap(response.getAllHeaders());
         int expectedStatusCode= combination.getResponse().getStatusCode();
