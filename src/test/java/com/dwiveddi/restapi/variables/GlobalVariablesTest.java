@@ -56,5 +56,7 @@ public class GlobalVariablesTest {
         System.out.println(GlobalVariables.evalJson("${headers.arrayX}"));
         System.out.println(GlobalVariables.evalJson("${headers.jsonZ}"));
         System.out.println(GlobalVariables.evalJson("${headers.jsonZ.x}"));
+        //Object o = GlobalVariables.evalJson("${headers.arrayY}");
+        //System.out.println(o.getClass().getSimpleName());
     }
 }
