@@ -1,34 +1,19 @@
 package com.dwiveddi.restapi.templateengine;
+import com.dwiveddi.restapi.variables.GlobalVariables;
 import freemarker.template.*;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created by dwiveddi on 4/2/2018.
  */
 public class FreemarkerTemplateEngine {
 
-    private static final Map<String, Object> GLOBAL_MAP =  new HashMap<>();
+
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    public void putToGlobalMap(String key, Object value){
-        GLOBAL_MAP.put(key, value);
-    }
-
-    public Object getFromGlobalMap(String key){
-        return GLOBAL_MAP.get(key);
-    }
-
-    public Map<String, Object> getGlobalMap(){
-        //TOD: return a clone of the map
-        return GLOBAL_MAP;
-    }
 
     private static final FreemarkerTemplateEngine INSTANCE = new FreemarkerTemplateEngine();
 
@@ -52,6 +37,11 @@ public class FreemarkerTemplateEngine {
     public String generate(String templateSource, Map<String, Object> data) {
         try {
             data.put("uuid", (TemplateMethodModelEx)(list) -> UUID.randomUUID().toString().replaceAll("-", ""));
+            data.put("randomString", new RandomString());
+            data.put("eval", new Eval());
+            data.put("evalObject", new EvalObject());
+            data.put("evalJson", new EvalObjectAsJson());
+
             Template e = new Template("", templateSource, this.configuration);
             StringWriter generatedOutput = new StringWriter();
             e.process(data, generatedOutput);
@@ -61,4 +51,55 @@ public class FreemarkerTemplateEngine {
         }
     }
 
+    private static class RandomString implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 1 ){
+                throw new IllegalArgumentException("Method 'randomString' requires exactly 1 integer input");
+            }
+            return randomString(((SimpleNumber)arguments.get(0)).getAsNumber().intValue());
+        }
+    }
+
+    private static class Eval implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 1 ){
+                throw new IllegalArgumentException("Method 'eval' requires exactly 1 String input");
+            }
+            return GlobalVariables.eval(((SimpleScalar) arguments.get(0)).getAsString());
+        }
+    }
+
+    private static class EvalObject implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 1 ){
+                throw new IllegalArgumentException("Method 'eval' requires exactly 1 String input");
+            }
+            return GlobalVariables.evalObject(((SimpleScalar) arguments.get(0)).getAsString());
+        }
+    }
+
+    private static class EvalObjectAsJson implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List arguments) throws TemplateModelException {
+            if(arguments.size() != 1 ){
+                throw new IllegalArgumentException("Method 'eval' requires exactly 1 String input");
+            }
+            return GlobalVariables.evalJson(((SimpleScalar) arguments.get(0)).getAsString());
+        }
+    }
+
+    private static String randomString(int length) {
+        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz";
+        StringBuilder salt = new StringBuilder();
+        Random rnd = new Random();
+        while (salt.length() < length) { // length of the random string.
+            int index = (int) (rnd.nextFloat() * SALTCHARS.length());
+            salt.append(SALTCHARS.charAt(index));
+        }
+        String saltStr = salt.toString();
+        return saltStr;
+    }
 }

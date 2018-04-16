@@ -1,0 +1,21 @@
+{
+    "hostname" : "10.0.60.219",
+    "port": "8080",
+    "actorId" : "${uuid()}",
+    "actorName" : "divya",
+    "headers" : {
+        "ContentType":"application/json",
+        "uid":"muruganandham.kalimuthu@altisource.com",
+        "arrayX" : [
+            {"a" : "a1", "b" : "b1"}, {"a" : "a2", "b": "b2"}
+        ],
+        "arrayY" : ["s1", "s2", "s3"],
+        "jsonZ" : {
+            "x" : {
+                "y" : {
+                    "z" : "z1"
+                }
+            }
+        }
+    }
+}

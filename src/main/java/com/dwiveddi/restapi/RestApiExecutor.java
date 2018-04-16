@@ -4,6 +4,7 @@ import com.dwiveddi.restapi.dto.Api;
 import com.dwiveddi.restapi.dto.PayloadStructure;
 import com.dwiveddi.restapi.dto.Request;
 import com.dwiveddi.restapi.dto.RequestResponseCombination;
+import com.dwiveddi.restapi.variables.GlobalVariables;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -39,7 +40,7 @@ public class RestApiExecutor {
             String confFile = System.getProperty("confFile");
             if(null != confFile) {
                 String generated = FreemarkerTemplateEngine.getInstance().generate(FileUtils.readFileAsString(confFile), new HashMap<>());
-                FreemarkerTemplateEngine.getInstance().getGlobalMap().putAll(OBJECT_MAPPER.readValue(generated, Map.class));
+                GlobalVariables.INSTANCE.putAll(OBJECT_MAPPER.readValue(generated, Map.class));
             }
             List<RequestResponseCombination> combinations = new ArrayList<>();
             String confDir = System.getProperty("testFile");
@@ -124,7 +125,7 @@ public class RestApiExecutor {
 
     @Test(dataProvider = "combinations")
     public void testRestApi(RequestResponseCombination combination) throws IOException {
-        combination.format(FreemarkerTemplateEngine.getInstance().getGlobalMap());
+        combination.format(GlobalVariables.INSTANCE);
         HttpRequestBase httpRequestBase = getHTTPBase(combination.getUrl().trim(), combination.getMethod(),combination.getRequest().getQueryParams(), convertToMap(combination.getRequest().getHeaders()), combination.getRequest().getPayload());
         HttpResponse response = getHttpClient().execute(httpRequestBase);
         Map<String, String> responseHeaders = convertHeadersListToMap(response.getAllHeaders());
@@ -208,7 +209,7 @@ public class RestApiExecutor {
                 }
                 break;
         }
-        FreemarkerTemplateEngine.getInstance().putToGlobalMap(variableName, o);
+        GlobalVariables.INSTANCE.put(variableName, o);
     }
 
     private void validateJsonStructure(List expectedJsonAttributes, Object objectToValidate,String keyPrefix) throws IOException {

@@ -1,6 +1,7 @@
 package com.dwiveddi.restapi.dto;
 
 import com.dwiveddi.mapper.csv.annotation.CsvMapped;
+import com.dwiveddi.restapi.variables.GlobalVariables;
 import lombok.Data;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.dwiveddi.restapi.templateengine.FreemarkerTemplateEngine;
@@ -30,17 +31,17 @@ public class Response {
      }
 
      public int getInt(String s){
-          s = engine.generate(s, FreemarkerTemplateEngine.getInstance().getGlobalMap());
+          s = engine.generate(s, GlobalVariables.INSTANCE);
           return Integer.parseInt(s.trim());
      }
      public boolean getBoolean(String s){
-          s = engine.generate(s, FreemarkerTemplateEngine.getInstance().getGlobalMap());
+          s = engine.generate(s, GlobalVariables.INSTANCE);
           return s.isEmpty() ? false : Boolean.parseBoolean(s.trim().toLowerCase());
      }
 
      public List<Object> getList(String s) {
           try {
-               s = engine.generate(s, FreemarkerTemplateEngine.getInstance().getGlobalMap());
+               s = engine.generate(s, GlobalVariables.INSTANCE);
                return s.isEmpty() ? new ArrayList<>() : new ObjectMapper().readValue(s, List.class);
           }catch (Exception e){
                throw new RuntimeException("Exception while gettingList from String = "+s, e);

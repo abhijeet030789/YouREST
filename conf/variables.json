@@ -3,5 +3,9 @@
     "port": "8080",
     "actorId" : "${uuid()}",
     "actorName" : "divya",
-    "headers" : {"ContentType":"application/json","uid":"muruganandham.kalimuthu@altisource.com"}
+    "headers" : {
+        "ContentType":"application/json",
+        "uid":"muruganandham.kalimuthu@altisource.com"
+
+    }
 }
