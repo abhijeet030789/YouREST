@@ -1,20 +1,19 @@
 package com.dwiveddi.restapi.dto;
 
 import com.dwiveddi.mapper.csv.annotation.CsvMapped;
-import lombok.Data;
-import com.dwiveddi.restapi.templateengine.FreemarkerTemplateEngine;
+import com.dwiveddi.testscommon.templateengine.FreemarkerTemplateEngine;
 
 import java.util.Map;
 
 /**
  * Created by dwiveddi on 2/6/2018.
  */
-@Data
 public class RequestResponseCombination {
 
     private static final FreemarkerTemplateEngine engine = FreemarkerTemplateEngine.getInstance();
     private String source;
     @CsvMapped.Column(index = 0) private String id;
+    @CsvMapped.Column(index = 13) private String desc;
     @CsvMapped.Column(index = 1) private String url;
     @CsvMapped.Column(index = 2) private String method;
     @CsvMapped.NestedColumn(index = {3,4,5}) private Request request;
@@ -30,15 +29,17 @@ public class RequestResponseCombination {
 
     @Override
     public String toString() {
-        return "RequestResponseCombination{" +
-                "source='" + source + '\'' +
-                ", id='" + id + '\'' +
-                ", url='" + url + '\'' +
-                ", method='" + method + '\'' +
-                ", request=" + request +
-                ", response=" + response +
-                ", variableName='" + variableName + '\'' +
-                '}';
+        final StringBuilder sb = new StringBuilder("RequestResponseCombination{");
+        sb.append("source='").append(source).append('\'');
+        sb.append(", id='").append(id).append('\'');
+        sb.append(", desc='").append(desc).append('\'');
+        sb.append(", url='").append(url).append('\'');
+        sb.append(", method='").append(method).append('\'');
+        sb.append(", request=").append(request);
+        sb.append(", response=").append(response);
+        sb.append(", variableName='").append(variableName).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 
     public Request getRequest() {
@@ -96,4 +97,5 @@ public class RequestResponseCombination {
     public void setSource(String source) {
         this.source = source;
     }
+
 }

@@ -1,10 +1,10 @@
 package com.dwiveddi.restapi.dto;
 
+
 import com.dwiveddi.mapper.csv.annotation.CsvMapped;
-import com.dwiveddi.restapi.variables.GlobalVariables;
-import lombok.Data;
-import org.codehaus.jackson.map.ObjectMapper;
-import com.dwiveddi.restapi.templateengine.FreemarkerTemplateEngine;
+import com.dwiveddi.testscommon.templateengine.FreemarkerTemplateEngine;
+import com.dwiveddi.testscommon.utils.JsonUtils;
+import com.dwiveddi.testscommon.variables.GlobalVariables;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,6 @@ import java.util.Map;
 /**
  * Created by dwiveddi on 2/6/2018.
  */
-@Data
 public class Response {
      private static final FreemarkerTemplateEngine engine = FreemarkerTemplateEngine.getInstance();
 
@@ -42,7 +41,7 @@ public class Response {
      public List<Object> getList(String s) {
           try {
                s = engine.generate(s, GlobalVariables.INSTANCE);
-               return s.isEmpty() ? new ArrayList<>() : new ObjectMapper().readValue(s, List.class);
+               return s.isEmpty() ? new ArrayList<>() : (List)JsonUtils.fromJson(s, List.class);
           }catch (Exception e){
                throw new RuntimeException("Exception while gettingList from String = "+s, e);
           }

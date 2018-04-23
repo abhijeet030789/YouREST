@@ -1,15 +1,13 @@
 package com.dwiveddi.restapi.dto;
 
 import com.dwiveddi.mapper.csv.annotation.CsvMapped;
-import lombok.Data;
-import com.dwiveddi.restapi.templateengine.FreemarkerTemplateEngine;
+import com.dwiveddi.testscommon.templateengine.FreemarkerTemplateEngine;
 
 import java.util.Map;
 
 /**
  * Created by dwiveddi on 2/6/2018.
  */
-@Data
 public class Request {
     private static final FreemarkerTemplateEngine engine = FreemarkerTemplateEngine.getInstance();
 

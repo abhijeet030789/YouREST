@@ -1,9 +1,7 @@
 package com.dwiveddi.restapi.config;
 
-import com.dwiveddi.restapi.utils.FileUtils;
-import org.junit.runner.Runner;
+import com.dwiveddi.testscommon.utils.FileUtils;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;

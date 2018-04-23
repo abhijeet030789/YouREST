@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class HttpClientUtils {
 
-    public static HttpClient getHttpClient() {
+     public static HttpClient getHttpClient() {
         RequestConfig globalConfig =  RequestConfig.custom()
                         .setConnectTimeout(1000*10) //10 sec, connection establishment timeout
                         .setConnectionRequestTimeout(1000 * 10) //10sec , connect request time, ping response from server

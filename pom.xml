@@ -6,7 +6,7 @@
 
     <groupId>com.dwiveddi</groupId>
     <artifactId>rest-api-test</artifactId>
-    <version>1.0</version>
+    <version>1.2</version>
     <properties>
         <junit.version>4.12</junit.version>
     </properties>
@@ -42,7 +42,7 @@
                                         implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>org.dwiveddi.automation.generic.Runner</mainClass>
+                                    <mainClass>com.dwiveddi.restapi.RestApiRunner</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -77,26 +77,7 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.freemarker</groupId>
-            <artifactId>freemarker</artifactId>
-            <version>2.3.23</version>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>6.8.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.9.13</version>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.16.12</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -118,8 +99,10 @@
             <artifactId>mapper</artifactId>
             <version>1.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.dwiveddi</groupId>
+            <artifactId>tests-common</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
-
-
 </project>

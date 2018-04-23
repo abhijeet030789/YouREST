@@ -1,13 +1,11 @@
 package com.dwiveddi.restapi.dto;
 
-import lombok.Data;
 
 import java.util.List;
 
 /**
  * Created by dwiveddi on 2/6/2018.
  */
-@Data
 public class Api {
 
     private String defaultUrl;

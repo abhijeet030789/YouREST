@@ -1,7 +1,6 @@
 package com.dwiveddi.restapi;
 
 import com.dwiveddi.restapi.config.RunnerInput;
-import com.dwiveddi.restapi.variables.GlobalVariables;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.testng.TestNG;
@@ -36,7 +35,7 @@ public class RestApiRunner {
         }
         testNG.setXmlSuites(Arrays.asList(suite));
         testNG.run();
-        return 0 == testNG.getStatus();
+        return 0 == testNG.getStatus() && !RestApiExecutor.isDataProviderFailed;
     }
 
     public static void main(String[] args) throws Exception {

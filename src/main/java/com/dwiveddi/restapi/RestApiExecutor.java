@@ -1,46 +1,42 @@
 package com.dwiveddi.restapi;
 
-import com.dwiveddi.restapi.dto.Api;
+import com.dwiveddi.mapper.excel.ExcelMapper;
 import com.dwiveddi.restapi.dto.PayloadStructure;
-import com.dwiveddi.restapi.dto.Request;
 import com.dwiveddi.restapi.dto.RequestResponseCombination;
-import com.dwiveddi.restapi.variables.GlobalVariables;
+import com.dwiveddi.testscommon.templateengine.FreemarkerTemplateEngine;
+import com.dwiveddi.testscommon.utils.FileUtils;
+import com.dwiveddi.testscommon.utils.JsonUtils;
+import com.dwiveddi.testscommon.variables.GlobalVariables;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.codehaus.jackson.map.ObjectMapper;
-import com.dwiveddi.mapper.excel.ExcelMapper;
 import org.testng.Assert;
 import org.testng.Reporter;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import com.dwiveddi.restapi.templateengine.FreemarkerTemplateEngine;
-import com.dwiveddi.restapi.utils.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static com.dwiveddi.restapi.utils.HttpClientUtils.convertHeadersListToMap;
-import static com.dwiveddi.restapi.utils.HttpClientUtils.getHTTPBase;
-import static com.dwiveddi.restapi.utils.HttpClientUtils.getHttpClient;
+import static com.dwiveddi.restapi.utils.HttpClientUtils.*;
 
 /**
  * Created by dwiveddi on 4/6/2018.
  */
 public class RestApiExecutor {
     private static HttpClient httpClient = getHttpClient();
-    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     String keyPrefix = "";
+    public static boolean isDataProviderFailed = false;
 
     @DataProvider(name = "combinations")
     public Iterator<Object[]> dataFromConfigFiles()  {
         try {
             String confFile = System.getProperty("confFile");
-            if(null != confFile) {
+            if(!(null == confFile || confFile.isEmpty() || confFile.startsWith("$"))) {
                 String generated = FreemarkerTemplateEngine.getInstance().generate(FileUtils.readFileAsString(confFile), new HashMap<>());
-                GlobalVariables.INSTANCE.putAll(OBJECT_MAPPER.readValue(generated, Map.class));
+                GlobalVariables.INSTANCE.putAll((Map)JsonUtils.fromJson(generated, Map.class));
             }
             List<RequestResponseCombination> combinations = new ArrayList<>();
             String confDir = System.getProperty("testFile");
@@ -56,9 +52,9 @@ public class RestApiExecutor {
                     if(null == sheetsToIgnore || sheetsToIgnore.isEmpty()){
                         set = new HashSet<>();
                     }else{
-                        set = OBJECT_MAPPER.readValue(sheetsToIgnore, Set.class);
+                        set = (Set)JsonUtils.fromJson(sheetsToIgnore, Set.class);
                     }
-                    List<RequestResponseCombination> list = excelMapper.getListByIgnoringSheetNames(filePath, set, 13, 2);
+                    List<RequestResponseCombination> list = excelMapper.getListByIgnoringSheetNames(filePath, set, 14, 2);
                     for(RequestResponseCombination combination : list){
                         combination.setSource(filePath);
                     }
@@ -72,6 +68,7 @@ public class RestApiExecutor {
             return list.iterator();
         }catch (Exception e){
             e.printStackTrace();
+            isDataProviderFailed = true;
             throw new RuntimeException("Error while ... + "+e.getMessage() + " - " + e.getCause(), e);
         }
     }
@@ -125,6 +122,11 @@ public class RestApiExecutor {
 
     @Test(dataProvider = "combinations")
     public void testRestApi(RequestResponseCombination combination) throws IOException {
+        String confFile = System.getProperty("confFile");
+        if(!(null == confFile || confFile.isEmpty() || confFile.startsWith("$"))) {
+            String generated = FreemarkerTemplateEngine.getInstance().generate(FileUtils.readFileAsString(confFile), new HashMap<>());
+            GlobalVariables.INSTANCE.putAll((Map)JsonUtils.fromJson(generated, Map.class));
+        }
         combination.format(GlobalVariables.INSTANCE);
         HttpRequestBase httpRequestBase = getHTTPBase(combination.getUrl().trim(), combination.getMethod(),combination.getRequest().getQueryParams(), convertToMap(combination.getRequest().getHeaders()), combination.getRequest().getPayload());
         HttpResponse response = getHttpClient().execute(httpRequestBase);
@@ -156,7 +158,7 @@ public class RestApiExecutor {
 
     private Map<String, String> convertToMap(String headers) throws IOException {
         if (!headers.isEmpty()) {
-            return OBJECT_MAPPER.readValue(headers, Map.class);
+            return (Map)JsonUtils.fromJson(headers, Map.class);
         }
         return new HashMap<>();
     }
@@ -172,21 +174,21 @@ public class RestApiExecutor {
                 o = content; break;
             case ARRAY_OF_STRING   :
                 try {
-                    o = new ObjectMapper().readValue(content, String[].class);
-                }catch(IOException e){
+                    o = JsonUtils.fromJson(content, String[].class);
+                }catch(Exception e){
                     Assert.assertTrue( false,"The content is not of type String[] Exception  = "+e.getMessage());
                 }
                 break;
             case ARRAY_OF_INTEGERS :
                 try {
-                    o = new ObjectMapper().readValue(content, Integer[].class);
-                }catch(IOException e){
+                    o = JsonUtils.fromJson(content, Integer[].class);
+                }catch(Exception e){
                     Assert.assertTrue(false,"The content is not of type Integer[]. Exception = "+e.getMessage());
                 }
                 break;
             case ARRAY_OF_JSON     :
                 try {
-                    Map<String, Object>[] mapArr = new ObjectMapper().readValue(content, Map[].class);
+                    Map<String, Object>[] mapArr = (Map<String, Object>[])JsonUtils.fromJson(content, Map[].class);
                     if(isValidationRequired) {
                         for (Map actualMap : mapArr) {
                             validateJsonStructure(expectedJsonAttributes, actualMap, keyPrefix);
@@ -199,7 +201,7 @@ public class RestApiExecutor {
                 break;
             case JSON              :
                 try {
-                    Map<String, Object> actualMap = new ObjectMapper().readValue(content, Map.class);
+                    Map<String, Object> actualMap = (Map<String, Object>)JsonUtils.fromJson(content, Map.class);
                     if(isValidationRequired) {
                         validateJsonStructure(expectedJsonAttributes, actualMap, keyPrefix);
                     }
