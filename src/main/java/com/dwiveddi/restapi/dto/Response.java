@@ -105,6 +105,10 @@ public class Response {
           return getList(this.jsonAttributes);
      }
 
+     public String getXmlSchemaPath(){
+         return this.jsonAttributes;
+     }
+
     /* public void setJsonAttributes(List<Object> jsonAttributes) {
           this.jsonAttributes = jsonAttributes;
      }*/

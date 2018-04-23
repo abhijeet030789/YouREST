@@ -3,6 +3,7 @@ package com.dwiveddi.restapi;
 import com.dwiveddi.mapper.excel.ExcelMapper;
 import com.dwiveddi.restapi.dto.PayloadStructure;
 import com.dwiveddi.restapi.dto.RequestResponseCombination;
+import com.dwiveddi.restapi.utils.XmlValidator;
 import com.dwiveddi.testscommon.templateengine.FreemarkerTemplateEngine;
 import com.dwiveddi.testscommon.utils.FileUtils;
 import com.dwiveddi.testscommon.utils.JsonUtils;
@@ -128,16 +129,20 @@ public class RestApiExecutor {
             GlobalVariables.INSTANCE.putAll((Map)JsonUtils.fromJson(generated, Map.class));
         }
         combination.format(GlobalVariables.INSTANCE);
+        Reporter.log("Request-Payload"+ combination.getRequest().getPayload());
         HttpRequestBase httpRequestBase = getHTTPBase(combination.getUrl().trim(), combination.getMethod(),combination.getRequest().getQueryParams(), convertToMap(combination.getRequest().getHeaders()), combination.getRequest().getPayload());
         HttpResponse response = getHttpClient().execute(httpRequestBase);
         Map<String, String> responseHeaders = convertHeadersListToMap(response.getAllHeaders());
         int expectedStatusCode= combination.getResponse().getStatusCode();
         String actualPayload = IOUtils.toString(response.getEntity().getContent());
-        Reporter.log("actualPayload = " + actualPayload);
-        List expectedJsonAttributes = combination.getResponse().getJsonAttributes();
+        Reporter.log("Response-Payload = " + actualPayload);
+        System.out.println("ssssssss = '"+actualPayload+"'");
+        Reporter.log("Response-StatusCode = " + response.getStatusLine().getStatusCode());
+        Reporter.log("Response-StatusCode-Desc = " + response.getStatusLine().getReasonPhrase());
+
         //Assertions
         if(0 != combination.getResponse().getStatusCode()){
-            Assert.assertEquals(response.getStatusLine().getStatusCode(), combination.getResponse().getStatusCode(), format("Status Code Should Match", combination));
+            Assert.assertEquals(response.getStatusLine().getStatusCode(), expectedStatusCode, format("Status Code Should Match", combination));
         }
         if(null != combination.getResponse().getPayload() && !combination.getResponse().getPayload().isEmpty()) {
             String expected = jsonOneLine(combination.getResponse().getPayload());
@@ -150,8 +155,13 @@ public class RestApiExecutor {
             String actualValue = responseHeaders.get(expectedHeader.getKey());
             Assert.assertEquals( actualValue, expectedValue);  //2. Match values
         }
-        digestPayload(combination.getResponse().isPayloadJsonValdationRequired(), actualPayload, combination.getResponse().getPayloadStructure()
-                , expectedJsonAttributes, keyPrefix, combination.getVariableName());
+        if(PayloadStructure.XML.equals(combination.getResponse().getPayloadStructure())){
+            XmlValidator.validateXMLBySchema(combination.getResponse().getXmlSchemaPath(), actualPayload);
+        }else {
+            List expectedJsonAttributes = combination.getResponse().getJsonAttributes();
+            digestPayload(combination.getResponse().isPayloadJsonValdationRequired(), actualPayload, combination.getResponse().getPayloadStructure()
+                    , expectedJsonAttributes, keyPrefix, combination.getVariableName());
+        }
 
 
     }

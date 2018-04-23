@@ -14,7 +14,25 @@ import java.util.*;
  * Created by dwiveddi on 4/6/2018.
  */
 public class RestApiRunner {
-    public static boolean run(RunnerInput runnerInput){
+
+    public static class Result{
+        private boolean isPassed = true;
+        private String resultFile = "";
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "isPassed=" + isPassed +
+                    ", resultFile='" + resultFile + '\'' +
+                    '}';
+        }
+
+        public Result(boolean isPassed, String resultFile) {
+            this.isPassed = isPassed;
+            this.resultFile = resultFile;
+        }
+    }
+    public static Result run(RunnerInput runnerInput){
         System.setProperty("testFile", runnerInput.getTestFile());
         if(runnerInput.getConfFile() != null) {
             System.setProperty("confFile", runnerInput.getConfFile());
@@ -35,15 +53,19 @@ public class RestApiRunner {
         }
         testNG.setXmlSuites(Arrays.asList(suite));
         testNG.run();
-        return 0 == testNG.getStatus() && !RestApiExecutor.isDataProviderFailed;
+        System.out.println(testNG.hasFailure());
+        System.out.println(testNG.hasSkip());
+        System.out.println(testNG.getStatus());
+        System.out.println("Detailed Report can be found at: "+testNG.getOutputDirectory()+"/index.html");
+        return new Result(0 == testNG.getStatus() && !RestApiExecutor.isDataProviderFailed, "file:///"+testNG.getOutputDirectory()+"/index.html");
     }
 
     public static void main(String[] args) throws Exception {
         //run(new RunnerInput("conf/Book1.xlsx"));
-        run(new RunnerInput("conf/Book1.xlsx").confFile("conf/book1Variables.json"));
+        //run(new RunnerInput("conf/Book1.xlsx").confFile("conf/book1Variables.json"));
         //run(new RunnerInput("conf/Book1.xlsx").outputDir("C:/REPORTS"));
         //run(new RunnerInput("conf/Book1.xlsx").sheetsToIgnore("QueryParam", "NestedArray", "PayloadPropagation", "Initial"));
-        //run(new RunnerInput("conf").confFile("conf/variables.json").sheetsToIgnore("ConfigFileInput","QueryParam", "NestedArray", "PayloadPropagation","Initial", "Backup"));
+        System.out.println(run(new RunnerInput("conf/Book1.xlsx").confFile("conf/book1Variables.json").outputDir("C:/REPORTS").sheetsToIgnore("ConfigFileInput","QueryParam", "NestedArray", "PayloadPropagation","Initial", "RandomString")));
         //System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("headers")).get("ContentType"));
         //System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("headers")));
         //System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("abc")));

@@ -10,5 +10,6 @@ public enum PayloadStructure {
     ARRAY_OF_STRING,
     ARRAY_OF_JSON,
     ARRAY_OF_INTEGERS,
-    ARRAY
+    ARRAY,
+    XML
 }
