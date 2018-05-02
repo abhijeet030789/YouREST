@@ -27,6 +27,8 @@ import static com.dwiveddi.restapi.utils.HttpClientUtils.*;
  * Created by dwiveddi on 4/6/2018.
  */
 public class RestApiExecutor {
+    public static final String TEST_VARIABLE_FILE =  "testVariableFile";
+    public static final String SUITE_VARIABLE_FILE = "suiteVariableFile";
     private static HttpClient httpClient = getHttpClient();
     String keyPrefix = "";
     public static boolean isDataProviderFailed = false;
@@ -34,7 +36,7 @@ public class RestApiExecutor {
     @DataProvider(name = "combinations")
     public Iterator<Object[]> dataFromConfigFiles()  {
         try {
-            String confFile = System.getProperty("confFile");
+            String confFile = System.getProperty(SUITE_VARIABLE_FILE);
             if(!(null == confFile || confFile.isEmpty() || confFile.startsWith("$"))) {
                 String generated = FreemarkerTemplateEngine.getInstance().generate(FileUtils.readFileAsString(confFile), new HashMap<>());
                 GlobalVariables.INSTANCE.putAll((Map)JsonUtils.fromJson(generated, Map.class));
@@ -49,13 +51,25 @@ public class RestApiExecutor {
                     //combinations.addAll(data(filePath));
                 } else if (filePath.endsWith(".xlsx")) {
                     String sheetsToIgnore = System.getProperty("sheetsToIgnore");
-                    Set<String> set = null;
+                    String sheetsToInclude = System.getProperty("sheetsToInclude");
+
+                    Set<String> ignoredSheets = null, includeSheets = null;
                     if(null == sheetsToIgnore || sheetsToIgnore.isEmpty()){
-                        set = new HashSet<>();
+                        ignoredSheets = new HashSet<>();
                     }else{
-                        set = (Set)JsonUtils.fromJson(sheetsToIgnore, Set.class);
+                        ignoredSheets = (Set)JsonUtils.fromJson(sheetsToIgnore, Set.class);
                     }
-                    List<RequestResponseCombination> list = excelMapper.getListByIgnoringSheetNames(filePath, set, 14, 2);
+                    if(null == sheetsToInclude || sheetsToInclude.isEmpty()){
+                        includeSheets = new HashSet<>();
+                    }else{
+                        includeSheets = (Set)JsonUtils.fromJson(sheetsToInclude, Set.class);
+                    }
+                    List<RequestResponseCombination> list;
+                    if(includeSheets.isEmpty()) {
+                       list = excelMapper.getListByIgnoringSheetNames(filePath, ignoredSheets, 14, 2);
+                    }else{
+                        list = excelMapper.getListBySheetNames(filePath, includeSheets, 14, 2);
+                    }
                     for(RequestResponseCombination combination : list){
                         combination.setSource(filePath);
                     }
@@ -123,22 +137,22 @@ public class RestApiExecutor {
 
     @Test(dataProvider = "combinations")
     public void testRestApi(RequestResponseCombination combination) throws IOException {
-        String confFile = System.getProperty("confFile");
+        Reporter.log(String.format("####### sourceFile = '%s',\n TestCaseID = '%s'", combination.getSource(), combination.getId()));
+        String confFile = System.getProperty(TEST_VARIABLE_FILE);
         if(!(null == confFile || confFile.isEmpty() || confFile.startsWith("$"))) {
             String generated = FreemarkerTemplateEngine.getInstance().generate(FileUtils.readFileAsString(confFile), new HashMap<>());
             GlobalVariables.INSTANCE.putAll((Map)JsonUtils.fromJson(generated, Map.class));
         }
         combination.format(GlobalVariables.INSTANCE);
-        Reporter.log("Request-Payload"+ combination.getRequest().getPayload());
+        Reporter.log("####### Request-Payload"+ combination.getRequest().getPayload());
         HttpRequestBase httpRequestBase = getHTTPBase(combination.getUrl().trim(), combination.getMethod(),combination.getRequest().getQueryParams(), convertToMap(combination.getRequest().getHeaders()), combination.getRequest().getPayload());
         HttpResponse response = getHttpClient().execute(httpRequestBase);
         Map<String, String> responseHeaders = convertHeadersListToMap(response.getAllHeaders());
         int expectedStatusCode= combination.getResponse().getStatusCode();
         String actualPayload = IOUtils.toString(response.getEntity().getContent());
-        Reporter.log("Response-Payload = " + actualPayload);
-        System.out.println("ssssssss = '"+actualPayload+"'");
-        Reporter.log("Response-StatusCode = " + response.getStatusLine().getStatusCode());
-        Reporter.log("Response-StatusCode-Desc = " + response.getStatusLine().getReasonPhrase());
+        Reporter.log("####### Response-Payload = " + actualPayload);
+        Reporter.log("####### Response-StatusCode = " + response.getStatusLine().getStatusCode());
+        Reporter.log("####### Response-StatusCode-Desc = " + response.getStatusLine().getReasonPhrase());
 
         //Assertions
         if(0 != combination.getResponse().getStatusCode()){

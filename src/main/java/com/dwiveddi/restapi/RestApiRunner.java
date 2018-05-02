@@ -10,6 +10,9 @@ import org.testng.xml.XmlTest;
 
 import java.util.*;
 
+import static com.dwiveddi.restapi.RestApiExecutor.SUITE_VARIABLE_FILE;
+import static com.dwiveddi.restapi.RestApiExecutor.TEST_VARIABLE_FILE;
+
 /**
  * Created by dwiveddi on 4/6/2018.
  */
@@ -34,16 +37,31 @@ public class RestApiRunner {
     }
     public static Result run(RunnerInput runnerInput){
         System.setProperty("testFile", runnerInput.getTestFile());
-        if(runnerInput.getConfFile() != null) {
-            System.setProperty("confFile", runnerInput.getConfFile());
+        if(runnerInput.getTestVariableFile() != null) {
+            System.setProperty(TEST_VARIABLE_FILE, runnerInput.getTestVariableFile());
         }
-        if(null != runnerInput.getSheetsToIgnore()) {
+        if(runnerInput.getSuiteVariableFile() != null) {
+            System.setProperty(SUITE_VARIABLE_FILE, runnerInput.getSuiteVariableFile());
+        }
+        if(null != runnerInput.getSheetsToInclude() && null != runnerInput.getSheetsToIgnore()) {
+            throw new IllegalArgumentException("[Ambiguous Situation] Both the variable sheetsToInclude and sheetsToIgnore are set. Please set only on of them");
+        }
+        if(null != runnerInput.getSheetsToIgnore()){
             try {
                 System.setProperty("sheetsToIgnore", new ObjectMapper().writeValueAsString(runnerInput.getSheetsToIgnore()));
             } catch (JsonProcessingException e) {
                 throw new RuntimeException("Exception while serializing sheetsToIgnore", e);
             }
         }
+
+        if(null != runnerInput.getSheetsToInclude()){
+            try {
+                System.setProperty("sheetsToInclude", new ObjectMapper().writeValueAsString(runnerInput.getSheetsToInclude()));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Exception while serializing sheetsToInclude", e);
+            }
+        }
+
         XmlSuite suite = new XmlSuite();
         XmlTest test = new XmlTest(suite);
         test.setClasses(Arrays.asList(new XmlClass("com.dwiveddi.restapi.RestApiExecutor")));
@@ -65,7 +83,13 @@ public class RestApiRunner {
         //run(new RunnerInput("conf/Book1.xlsx").confFile("conf/book1Variables.json"));
         //run(new RunnerInput("conf/Book1.xlsx").outputDir("C:/REPORTS"));
         //run(new RunnerInput("conf/Book1.xlsx").sheetsToIgnore("QueryParam", "NestedArray", "PayloadPropagation", "Initial"));
-        System.out.println(run(new RunnerInput("conf/Book1.xlsx").confFile("conf/book1Variables.json").outputDir("C:/REPORTS").sheetsToIgnore("ConfigFileInput","QueryParam", "NestedArray", "PayloadPropagation","Initial", "RandomString")));
+        System.out.println(run(new RunnerInput("conf/Book1.xlsx")
+                .testVariableFile("conf/book1Variables.json")
+                .suiteVariableFile("conf/book1SuiteVariables.json")
+                .outputDir("C:/REPORTS")
+                .sheetsToInclude("Sheet1")
+                //.sheetsToIgnore("ConfigFileInput", "QueryParam", "NestedArray", "PayloadPropagation", "Initial", "RandomString","InputFiles")
+                ));
         //System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("headers")).get("ContentType"));
         //System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("headers")));
         //System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("abc")));

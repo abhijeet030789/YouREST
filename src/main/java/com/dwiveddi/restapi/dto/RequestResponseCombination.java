@@ -2,6 +2,7 @@ package com.dwiveddi.restapi.dto;
 
 import com.dwiveddi.mapper.csv.annotation.CsvMapped;
 import com.dwiveddi.testscommon.templateengine.FreemarkerTemplateEngine;
+import org.testng.Reporter;
 
 import java.util.Map;
 
@@ -29,15 +30,15 @@ public class RequestResponseCombination {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("RequestResponseCombination{");
-        sb.append("source='").append(source).append('\'');
-        sb.append(", id='").append(id).append('\'');
-        sb.append(", desc='").append(desc).append('\'');
-        sb.append(", url='").append(url).append('\'');
-        sb.append(", method='").append(method).append('\'');
-        sb.append(", request=").append(request);
-        sb.append(", response=").append(response);
-        sb.append(", variableName='").append(variableName).append('\'');
+        final StringBuilder sb = new StringBuilder("RequestResponseCombination{\n");
+        sb.append("source='").append(source).append('\'').append(",\n");
+        sb.append(", id='").append(id).append('\'').append("\n");
+        sb.append(", desc='").append(desc).append('\'').append("\n");
+        sb.append(", url='").append(url).append('\'').append("\n");
+        sb.append(", method='").append(method).append('\'').append("\n");
+        sb.append(", request=").append(request).append("\n");
+        sb.append(", response=").append(response).append("\n");
+        sb.append(", variableName='").append(variableName).append('\'').append("\n");
         sb.append('}');
         return sb.toString();
     }

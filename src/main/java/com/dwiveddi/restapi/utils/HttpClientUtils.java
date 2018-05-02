@@ -1,15 +1,20 @@
 package com.dwiveddi.restapi.utils;
 
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -58,7 +63,25 @@ public class HttpClientUtils {
         if(httpRequestBase instanceof HttpEntityEnclosingRequestBase){
             HttpEntityEnclosingRequestBase httpEntityEnclosingRequestBase = (HttpEntityEnclosingRequestBase) httpRequestBase;
             if(null != payload) {
-                httpEntityEnclosingRequestBase.setEntity(new StringEntity(payload));
+                if(isMultipart(payload)){
+                    MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+                    String lines[] = payload.split("\\n");
+                    boolean isLineContinuation = false;
+                    StringBuilder prevText = new StringBuilder();
+                    for(String line :  lines){
+                        String arr[] = line.substring(2).split("=");
+                        String key = arr[0].trim();
+                        String value = arr[1].trim();
+                        if(value.startsWith("@")){
+                            builder.addBinaryBody(key, new File(value.substring(1)));//after '@' which at index 0
+                        }else{
+                            builder.addTextBody(key, value);
+                        }
+                    }
+                    httpEntityEnclosingRequestBase.setEntity(builder.build());
+                }else {
+                    httpEntityEnclosingRequestBase.setEntity(new StringEntity(payload));
+                }
             }
         }
         if(null != headers) {
@@ -68,6 +91,9 @@ public class HttpClientUtils {
         return httpRequestBase;
     }
 
+    public static boolean isMultipart(String payload){
+        return payload.startsWith("F ");
+    }
     public static Map<String, String> convertHeadersListToMap(Header[] headers){
         Map<String, String> map = new HashMap<>();
         for (Header header : headers) {
@@ -85,5 +111,12 @@ public class HttpClientUtils {
         return headers;
     }
 
+    public static void main(String[] args) {
+        String[] arr = "a=a1\nb=1\nc=1".split("\\n");
+        for(String line : arr){
+            System.out.println(Arrays.asList(line.split("=")));
+        }
+        System.out.println(Arrays.asList(arr));
 
+    }
 }
