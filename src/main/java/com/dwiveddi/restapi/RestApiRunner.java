@@ -84,15 +84,15 @@ public class RestApiRunner {
         //run(new RunnerInput("conf/Book1.xlsx").outputDir("C:/REPORTS"));
         //run(new RunnerInput("conf/Book1.xlsx").sheetsToIgnore("QueryParam", "NestedArray", "PayloadPropagation", "Initial"));
         System.out.println(run(new RunnerInput("conf/Book1.xlsx")
-                .testVariableFile("conf/book1Variables.json")
-                .suiteVariableFile("conf/book1SuiteVariables.json")
+                //.testVariableFile("conf/book1Variables.json")
+                //.suiteVariableFile("conf/book1SuiteVariables.json")
                 .outputDir("C:/REPORTS")
                 .sheetsToInclude("Sheet1")
-                //.sheetsToIgnore("ConfigFileInput", "QueryParam", "NestedArray", "PayloadPropagation", "Initial", "RandomString","InputFiles")
+                //.sheetsToIgnore("ConfigFileInput", "QueryParam", "NestedArray", "PayloadPropagation", "Initial", "RandomString","InputFiles","SuiteVariable")
                 ));
-        //System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("headers")).get("ContentType"));
-        //System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("headers")));
-        //System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("abc")));
+       /* System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("headers")).get("ContentType"));
+        System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("headers")));
+        System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("abc")));*/
        /* System.out.println(GlobalVariables.eval("${abc.hello}"));
         System.out.println(GlobalVariables.evalJson("${abc}"));
         System.out.println(GlobalVariables.eval("${headers.arrayY[0]}"));
