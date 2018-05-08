@@ -84,8 +84,8 @@ public class RestApiRunner {
         //run(new RunnerInput("conf/Book1.xlsx").outputDir("C:/REPORTS"));
         //run(new RunnerInput("conf/Book1.xlsx").sheetsToIgnore("QueryParam", "NestedArray", "PayloadPropagation", "Initial"));
         System.out.println(run(new RunnerInput("conf/Book1.xlsx")
-                //.testVariableFile("conf/book1Variables.json")
-                //.suiteVariableFile("conf/book1SuiteVariables.json")
+                .testVariableFile("conf/book1Variables.json")
+                .suiteVariableFile("conf/book1SuiteVariables.json")
                 .outputDir("C:/REPORTS")
                 .sheetsToInclude("Sheet1")
                 //.sheetsToIgnore("ConfigFileInput", "QueryParam", "NestedArray", "PayloadPropagation", "Initial", "RandomString","InputFiles","SuiteVariable")
