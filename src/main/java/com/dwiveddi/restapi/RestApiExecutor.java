@@ -66,9 +66,9 @@ public class RestApiExecutor {
                     }
                     List<RequestResponseCombination> list;
                     if(includeSheets.isEmpty()) {
-                       list = excelMapper.getListByIgnoringSheetNames(filePath, ignoredSheets, 14, 2);
+                       list = excelMapper.getListByIgnoringSheetNames(filePath, ignoredSheets, 15, 2);
                     }else{
-                        list = excelMapper.getListBySheetNames(filePath, includeSheets, 14, 2);
+                        list = excelMapper.getListBySheetNames(filePath, includeSheets, 15, 2);
                     }
                     for(RequestResponseCombination combination : list){
                         combination.setSource(filePath);
@@ -77,8 +77,18 @@ public class RestApiExecutor {
                 }
             }
             List<Object[]> list = new ArrayList<>();
+            Set<String> filteredTags = (Set)JsonUtils.fromJson(System.getProperty("filteredTags"), Set.class);//Input1
+            boolean isFilterToInclude = Boolean.parseBoolean(System.getProperty("isFilterToInclude")); //Input2
             for (RequestResponseCombination combination : combinations) {
-                list.add(new Object[]{combination});
+                boolean toAdd = isFilterToInclude ? false : true; //toAdd = false
+                for(String filterTags : filteredTags){
+                    if(combination.getTags().contains(filterTags)){
+                        toAdd  = isFilterToInclude ? true: false; break; //toAdd = true
+                    }
+                }
+                if(toAdd) {
+                    list.add(new Object[]{combination});
+                }
             }
             return list.iterator();
         }catch (Exception e){
@@ -144,7 +154,6 @@ public class RestApiExecutor {
             GlobalVariables.INSTANCE.putAll((Map)JsonUtils.fromJson(generated, Map.class));
         }
         combination.format(GlobalVariables.INSTANCE);
-        Reporter.log("####### Request-Payload"+ combination.getRequest().getPayload());
         HttpRequestBase httpRequestBase = getHTTPBase(combination.getUrl().trim(), combination.getMethod(),combination.getRequest().getQueryParams(), convertToMap(combination.getRequest().getHeaders()), combination.getRequest().getPayload());
         HttpResponse response = getHttpClient().execute(httpRequestBase);
         Map<String, String> responseHeaders = convertHeadersListToMap(response.getAllHeaders());

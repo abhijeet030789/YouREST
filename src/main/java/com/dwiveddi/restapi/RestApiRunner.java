@@ -1,6 +1,7 @@
 package com.dwiveddi.restapi;
 
 import com.dwiveddi.restapi.config.RunnerInput;
+import com.dwiveddi.testscommon.utils.JsonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.testng.TestNG;
@@ -35,6 +36,7 @@ public class RestApiRunner {
             this.resultFile = resultFile;
         }
     }
+
     public static Result run(RunnerInput runnerInput){
         System.setProperty("testFile", runnerInput.getTestFile());
         if(runnerInput.getTestVariableFile() != null) {
@@ -61,6 +63,21 @@ public class RestApiRunner {
                 throw new RuntimeException("Exception while serializing sheetsToInclude", e);
             }
         }
+        boolean isFilterToInclude = false;
+        Set<String> filteredTags = new HashSet<>();
+        if(null != runnerInput.getIncludeTags() && !runnerInput.getIncludeTags().isEmpty()){
+            isFilterToInclude = true;
+            filteredTags = runnerInput.getIncludeTags();
+        }else if(null != runnerInput.getExcludeTags() && !runnerInput.getExcludeTags().isEmpty()){
+            filteredTags = runnerInput.getExcludeTags();
+        }
+
+        try {
+            System.setProperty("filteredTags", new ObjectMapper().writeValueAsString(filteredTags));
+            System.setProperty("isFilterToInclude", String.valueOf(isFilterToInclude));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Exception while serializing filteredTags", e);
+        }
 
         XmlSuite suite = new XmlSuite();
         XmlTest test = new XmlTest(suite);
@@ -70,6 +87,14 @@ public class RestApiRunner {
             testNG.setOutputDirectory(runnerInput.getOutputDir());
         }
         testNG.setXmlSuites(Arrays.asList(suite));
+        if(!runnerInput.isZephyrUpdateDisabled()) {
+            testNG.setListenerClasses(Arrays.asList(RestApiListener.class));
+        }
+        Map<String, String> suiteParams = new HashMap<>();
+        suiteParams.put("zephyrEnv",  runnerInput.getZephyrEnv());
+        suiteParams.put("versionName",  runnerInput.getVersionName());
+        suiteParams.put("cycleName",  runnerInput.getCycleName());
+        suite.setParameters(suiteParams);
         testNG.run();
         System.out.println(testNG.hasFailure());
         System.out.println(testNG.hasSkip());
@@ -83,11 +108,17 @@ public class RestApiRunner {
         //run(new RunnerInput("conf/Book1.xlsx").confFile("conf/book1Variables.json"));
         //run(new RunnerInput("conf/Book1.xlsx").outputDir("C:/REPORTS"));
         //run(new RunnerInput("conf/Book1.xlsx").sheetsToIgnore("QueryParam", "NestedArray", "PayloadPropagation", "Initial"));
-        System.out.println(run(new RunnerInput("conf/Book1.xlsx")
-                .testVariableFile("conf/book1Variables.json")
-                .suiteVariableFile("conf/book1SuiteVariables.json")
-                .outputDir("C:/REPORTS")
-                .sheetsToInclude("Sheet1")
+        System.out.println(run(new RunnerInput("C:/Users/dwiveddi/Desktop/ActionDriverAPI/Rules/Divya.xlsx")
+                        //.testVariableFile("conf/book1Variables.json")
+                        //.suiteVariableFile("conf/book1SuiteVariables.json")
+                        .outputDir("C:/REPORTS")
+                        .sheetsToInclude("Sheet2")
+                        .zephyrEnv("conf/zephyrEnv.properties")
+                        .versionName("Unscheduled")
+                        .cycleName("abcd")
+                        .excludeTags("A")
+                        .includeTags("A")
+                        //.setZephyrUpdateDisabled(true)
                 //.sheetsToIgnore("ConfigFileInput", "QueryParam", "NestedArray", "PayloadPropagation", "Initial", "RandomString","InputFiles","SuiteVariable")
                 ));
        /* System.out.println(((Map<String, Object>) GlobalVariables.INSTANCE.get("headers")).get("ContentType"));

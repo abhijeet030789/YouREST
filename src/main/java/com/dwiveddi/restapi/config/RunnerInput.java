@@ -2,11 +2,10 @@ package com.dwiveddi.restapi.config;
 
 import com.dwiveddi.testscommon.utils.FileUtils;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by dwiveddi on 4/8/2018.
@@ -18,7 +17,21 @@ public class RunnerInput {
     private Set<String> sheetsToIgnore;
     private Set<String> sheetsToInclude;
     private String outputDir;
+    private String zephyrEnv;
+    private String versionName;
+    private String cycleName;
+    private Set<String> includeTags;
+    private Set<String> excludeTags;
+    private boolean isZephyrUpdateDisabled;
 
+
+    public String getVersionName() {
+        return versionName;
+    }
+
+    public String getCycleName() {
+        return cycleName;
+    }
 
     public RunnerInput(String testFile) {
         FileUtils.validateFileExists(testFile, true);
@@ -59,6 +72,45 @@ public class RunnerInput {
         return this;
     }
 
+    public RunnerInput zephyrEnv(String zephyrEnv){
+        FileUtils.validateFileExists(zephyrEnv,false);
+        this.zephyrEnv = new File(zephyrEnv).getAbsolutePath();
+        return this;
+    }
+
+    public RunnerInput versionName(String versionName){
+        this.versionName = versionName;
+        return this;
+    }
+
+    public boolean isZephyrUpdateDisabled() {
+        return isZephyrUpdateDisabled;
+    }
+
+    public RunnerInput setZephyrUpdateDisabled(boolean isZephyrUpdateDisabled) {
+        this.isZephyrUpdateDisabled = isZephyrUpdateDisabled;
+        return this;
+
+    }
+
+    public RunnerInput cycleName(String cycleName){
+        this.cycleName = cycleName;
+        return this;
+    }
+
+    public RunnerInput includeTags(String... includeTags){
+        if(includeTags.length != 0) {
+            this.includeTags = new HashSet<String>(Arrays.asList(includeTags));
+        }
+        return this;
+    }
+
+    public RunnerInput excludeTags(String... excludeTags){
+        if(excludeTags.length != 0) {
+            this.excludeTags = new HashSet<String>(Arrays.asList(excludeTags));
+        }
+        return this;
+    }
 
     public String getTestFile() {
         return testFile;
@@ -82,5 +134,17 @@ public class RunnerInput {
 
     public String getOutputDir() {
         return outputDir;
+    }
+
+    public String getZephyrEnv() {
+        return zephyrEnv;
+    }
+
+    public Set<String> getIncludeTags() {
+        return includeTags;
+    }
+
+    public Set<String> getExcludeTags() {
+        return excludeTags;
     }
 }

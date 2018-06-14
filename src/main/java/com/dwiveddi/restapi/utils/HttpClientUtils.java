@@ -2,6 +2,7 @@ package com.dwiveddi.restapi.utils;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
@@ -11,10 +12,13 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
+import org.testng.Reporter;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +49,7 @@ public class HttpClientUtils {
 
     public static HttpRequestBase getHTTPBase(String path, String httpMethod,String queryParams,Map<String,String> headers, String payload) throws UnsupportedEncodingException {
         HttpRequestBase httpRequestBase = null;
-        if(null!= queryParams){
+        if(null!= queryParams && !queryParams.isEmpty()){
             if(queryParams.startsWith("?")){
                 path = path + queryParams;
             }else {
@@ -88,7 +92,22 @@ public class HttpClientUtils {
             httpRequestBase.setHeaders(convertHeaderMapToList(headers));
         }
 
+        Reporter.log("####### Request-Method = " + httpMethod);
+        Reporter.log("####### Request-URL = " + path);
+        Reporter.log("####### Request-Headers = " + headers);
+        Reporter.log("####### Request-Body" + payload);
+
+
         return httpRequestBase;
+    }
+
+    public static void setBasicAuthorizationHeader(HttpRequestBase httpRequestBase, String username, String password){
+        if (!username.isEmpty() && !password.isEmpty()) {
+            Base64.Encoder encoder = Base64.getEncoder();
+            String encodedString = encoder.encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
+            Header authHeader = new BasicHeader(HttpHeaders.AUTHORIZATION, "Basic " + encodedString);
+            httpRequestBase.setHeader(authHeader);
+        }
     }
 
     public static boolean isMultipart(String payload){
