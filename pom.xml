@@ -6,7 +6,7 @@
 
     <groupId>com.dwiveddi</groupId>
     <artifactId>rest-api-test</artifactId>
-    <version>1.3</version>
+    <version>1.4</version>
     <properties>
         <junit.version>4.12</junit.version>
     </properties>
